@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, ClipboardList, Home, Users, Settings, FileText } from "lucide-react"
+import { Calendar, ClipboardList, Home, Users, Settings, FileText, ListPlus } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -33,6 +33,11 @@ const items = [
     icon: Users,
   },
   {
+    title: "Hour Tracking",
+    url: "/hours",
+    icon: ListPlus,
+  },
+  {
     title: "Events",
     url: "/events",
     icon: Calendar,
@@ -61,7 +66,7 @@ export function AppSidebar() {
           </div>
           <div>
             <h2 className="text-lg font-semibold">ClubSync</h2>
-            <p className="text-sm text-muted-foreground">Drama Club</p>
+            <p className="text-sm text-muted-foreground">Example Club</p>
           </div>
         </div>
       </SidebarHeader>
