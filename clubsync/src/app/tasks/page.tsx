@@ -486,34 +486,6 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common task management operations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Bulk Complete
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <User className="h-5 w-5" />
-                Assign Tasks
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Calendar className="h-5 w-5" />
-                Set Deadlines
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <ClipboardList className="h-5 w-5" />
-                Export Report
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

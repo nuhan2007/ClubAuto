@@ -23,10 +23,7 @@ const members = [
   { id: 2, name: "Bob Smith", grade: "11th", email: "bob@school.edu", attendance: 87 },
   { id: 3, name: "Carol Davis", grade: "12th", email: "carol@school.edu", attendance: 92 },
   { id: 4, name: "David Wilson", grade: "10th", email: "david@school.edu", attendance: 78 },
-  { id: 5, name: "Emma Brown", grade: "11th", email: "emma@school.edu", attendance: 100 },
-  { id: 6, name: "Frank Miller", grade: "12th", email: "frank@school.edu", attendance: 83 },
-  { id: 7, name: "Grace Lee", grade: "10th", email: "grace@school.edu", attendance: 89 },
-  { id: 8, name: "Henry Taylor", grade: "11th", email: "henry@school.edu", attendance: 91 },
+  { id: 5, name: "Emma Brown", grade: "11th", email: "emma@school.edu", attendance: 100 }
 ]
 
 const attendanceRecords = [
@@ -276,34 +273,6 @@ export default function Attendance() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common attendance management tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <UserCheck className="h-5 w-5" />
-                Send Reminders
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Generate Report
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Users className="h-5 w-5" />
-                Export Data
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Calendar className="h-5 w-5" />
-                View Calendar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

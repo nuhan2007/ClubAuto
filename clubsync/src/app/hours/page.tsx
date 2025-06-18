@@ -352,34 +352,6 @@ export default function HourTracking() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common hour tracking tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Clock className="h-5 w-5" />
-                Bulk Approve
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Generate Report
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Calendar className="h-5 w-5" />
-                Export Data
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Award className="h-5 w-5" />
-                Award Certificates
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

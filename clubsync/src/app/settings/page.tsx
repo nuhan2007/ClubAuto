@@ -205,6 +205,17 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Select defaultValue="english">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="theme">Theme</Label>
                 <Select value={theme} onValueChange={setTheme}>
                   <SelectTrigger>
@@ -213,17 +224,6 @@ export default function SettingsPage() {
                   <SelectContent>
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select defaultValue="english">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="english">English</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -264,41 +264,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Security Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Security & Privacy
-            </CardTitle>
-            <CardDescription>Manage access and privacy settings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Access Control</h4>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-password">Admin Password</Label>
-                  <Input id="admin-password" type="password" placeholder="Enter new password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="member-permissions">Default Member Permissions</Label>
-                  <Select defaultValue="view-only">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="view-only">View Only</SelectItem>
-                      <SelectItem value="edit-own">Edit Own Data</SelectItem>
-                      <SelectItem value="edit-all">Edit All Data</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

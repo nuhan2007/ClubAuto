@@ -422,34 +422,6 @@ export default function EventsPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common event management tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Calendar className="h-5 w-5" />
-                View Calendar
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Users className="h-5 w-5" />
-                Send Invites
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <MapPin className="h-5 w-5" />
-                Book Venue
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Star className="h-5 w-5" />
-                Event Reports
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

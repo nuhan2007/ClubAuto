@@ -135,34 +135,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button className="h-20 flex-col gap-2">
-                <FileText className="h-5 w-5" />
-                New Meeting Notes
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Users className="h-5 w-5" />
-                Take Attendance
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <CalendarDays className="h-5 w-5" />
-                Schedule Event
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Clock className="h-5 w-5" />
-                Send Reminder
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
