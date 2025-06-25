@@ -10,22 +10,22 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { User, Bell, Shield, Database, Palette, Mail, Download, Upload, Trash2, Save, LogOut } from "lucide-react"
+import { useTheme } from "@/lib/theme-context"
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme()
   const [clubName, setClubName] = useState("Drama Club")
   const [clubDescription, setClubDescription] = useState(
     "High school drama and theater club focused on developing performing arts skills and community engagement.",
   )
-  const [advisorName, setAdvisorName] = useState("Mr. Nuhan Hasan")
-  const [advisorEmail, setAdvisorEmail] = useState("nmh.07000@gmail.com")
-  const [meetingDay, setMeetingDay] = useState("Friyay")
-  const [meetingTime, setMeetingTime] = useState("3:30")
-  const [theme, setTheme] = useState("light")
+  const [advisorName, setAdvisorName] = useState("Ms. Sarah Johnson")
+  const [advisorEmail, setAdvisorEmail] = useState("s.johnson@school.edu")
+  const [meetingDay, setMeetingDay] = useState("tuesday")
+  const [meetingTime, setMeetingTime] = useState("15:30")
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [meetingReminders, setMeetingReminders] = useState(true)
-  const [attendanceAlerts, setAttendanceAlerts] = useState(false)
   const [hourApprovals, setHourApprovals] = useState(true)
 
   const handleLogout = () => {
@@ -34,9 +34,46 @@ export default function SettingsPage() {
   }
 
   const handleSaveSettings = () => {
-    // Here you would typically save to a backend
-    console.log("Settings saved!")
+    // Save all settings to localStorage
+    const settings = {
+      clubName,
+      clubDescription,
+      advisorName,
+      advisorEmail,
+      meetingDay,
+      meetingTime,
+      theme,
+      emailNotifications,
+      meetingReminders,
+      hourApprovals,
+      savedAt: new Date().toISOString(),
+    }
+
+    localStorage.setItem("clubSettings", JSON.stringify(settings))
+
+    // Show success message
+    alert("Settings saved successfully!")
   }
+
+  // Load settings on component mount
+  useState(() => {
+    const savedSettings = localStorage.getItem("clubSettings")
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings)
+      setClubName(settings.clubName || "Drama Club")
+      setClubDescription(settings.clubDescription || "")
+      setAdvisorName(settings.advisorName || "Ms. Sarah Johnson")
+      setAdvisorEmail(settings.advisorEmail || "s.johnson@school.edu")
+      setMeetingDay(settings.meetingDay || "tuesday")
+      setMeetingTime(settings.meetingTime || "15:30")
+      setEmailNotifications(settings.emailNotifications ?? true)
+      setMeetingReminders(settings.meetingReminders ?? true)
+      setHourApprovals(settings.hourApprovals ?? true)
+      if (settings.theme) {
+        setTheme(settings.theme)
+      }
+    }
+  })
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -57,7 +94,7 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <div className="flex-1 p-6 space-y-10">
+      <div className="flex-1 p-6 space-y-6">
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Club Information */}
           <Card>
@@ -167,19 +204,6 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox id="attendance-alerts" checked={attendanceAlerts} onCheckedChange={setAttendanceAlerts} />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="attendance-alerts"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Attendance Alerts
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Notify when attendance is low</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
                 <Checkbox id="hour-approvals" checked={hourApprovals} onCheckedChange={setHourApprovals} />
                 <div className="grid gap-1.5 leading-none">
                   <Label
@@ -205,17 +229,6 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select defaultValue="english">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="english">English</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="theme">Theme</Label>
                 <Select value={theme} onValueChange={setTheme}>
                   <SelectTrigger>
@@ -224,6 +237,20 @@ export default function SettingsPage() {
                   <SelectContent>
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Select defaultValue="english">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="spanish">Spanish</SelectItem>
+                    <SelectItem value="french">French</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -264,6 +291,62 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Security Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Security & Privacy
+            </CardTitle>
+            <CardDescription>Manage access and privacy settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Access Control</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Admin Password</Label>
+                  <Input id="admin-password" type="password" placeholder="Enter new password" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="member-permissions">Default Member Permissions</Label>
+                  <Select defaultValue="view-only">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="view-only">View Only</SelectItem>
+                      <SelectItem value="edit-own">Edit Own Data</SelectItem>
+                      <SelectItem value="edit-all">Edit All Data</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Privacy Settings</h4>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="public-roster" />
+                  <Label htmlFor="public-roster" className="text-sm">
+                    Make member roster public
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="share-hours" />
+                  <Label htmlFor="share-hours" className="text-sm">
+                    Share volunteer hours publicly
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="allow-photos" />
+                  <Label htmlFor="allow-photos" className="text-sm">
+                    Allow photo sharing
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

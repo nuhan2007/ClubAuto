@@ -19,102 +19,79 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ClipboardList, Plus, Search, Calendar, User, AlertTriangle, CheckCircle, Clock, LogOut } from "lucide-react"
-
-const tasks = [
-  {
-    id: 1,
-    title: "Finalize cast list for winter performance",
-    description: "Review auditions and make final casting decisions for all roles in the winter production.",
-    assignee: "Ms. Sarah Johnson",
-    dueDate: "December 20, 2024",
-    priority: "high",
-    status: "in-progress",
-    category: "Production",
-    progress: 75,
-    subtasks: [
-      { id: 1, title: "Review audition videos", completed: true },
-      { id: 2, title: "Discuss with assistant director", completed: true },
-      { id: 3, title: "Make final decisions", completed: false },
-      { id: 4, title: "Notify cast members", completed: false },
-    ],
-  },
-  {
-    id: 2,
-    title: "Order costumes and props",
-    description: "Purchase all necessary costumes and props for the winter performance based on the approved budget.",
-    assignee: "Alice Johnson",
-    dueDate: "January 5, 2025",
-    priority: "medium",
-    status: "pending",
-    category: "Production",
-    progress: 25,
-    subtasks: [
-      { id: 1, title: "Create shopping list", completed: true },
-      { id: 2, title: "Get budget approval", completed: false },
-      { id: 3, title: "Place orders", completed: false },
-    ],
-  },
-  {
-    id: 3,
-    title: "Plan bake sale fundraiser",
-    description: "Organize and coordinate the upcoming bake sale to raise funds for club activities.",
-    assignee: "Bob Smith",
-    dueDate: "December 25, 2024",
-    priority: "medium",
-    status: "in-progress",
-    category: "Fundraising",
-    progress: 60,
-    subtasks: [
-      { id: 1, title: "Set date and location", completed: true },
-      { id: 2, title: "Create volunteer schedule", completed: true },
-      { id: 3, title: "Promote event", completed: false },
-      { id: 4, title: "Coordinate donations", completed: false },
-    ],
-  },
-  {
-    id: 4,
-    title: "Update club website",
-    description: "Refresh the club website with new photos, upcoming events, and member achievements.",
-    assignee: "Carol Davis",
-    dueDate: "December 30, 2024",
-    priority: "low",
-    status: "pending",
-    category: "Marketing",
-    progress: 10,
-    subtasks: [
-      { id: 1, title: "Gather new photos", completed: true },
-      { id: 2, title: "Write event descriptions", completed: false },
-      { id: 3, title: "Update member page", completed: false },
-    ],
-  },
-  {
-    id: 5,
-    title: "Coordinate community service project",
-    description: "Organize volunteer work at the local theater for set building and maintenance.",
-    assignee: "Emma Brown",
-    dueDate: "December 28, 2024",
-    priority: "medium",
-    status: "completed",
-    category: "Service",
-    progress: 100,
-    subtasks: [
-      { id: 1, title: "Contact theater manager", completed: true },
-      { id: 2, title: "Schedule volunteer slots", completed: true },
-      { id: 3, title: "Send reminders", completed: true },
-    ],
-  },
-]
+import { useData } from "@/lib/data-context"
 
 const taskCategories = ["All", "Production", "Fundraising", "Marketing", "Service", "Administrative"]
 const taskStatuses = ["All", "pending", "in-progress", "completed", "overdue"]
 const priorities = ["All", "high", "medium", "low"]
 
 export default function TasksPage() {
+  const { tasks, addTask, members } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
   const [filterPriority, setFilterPriority] = useState("All")
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    assignee: "",
+    dueDate: "",
+    priority: "",
+    category: "",
+    subtasks: ["", "", ""],
+  })
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubtaskChange = (index: number, value: string) => {
+    const newSubtasks = [...formData.subtasks]
+    newSubtasks[index] = value
+    setFormData((prev) => ({ ...prev, subtasks: newSubtasks }))
+  }
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.assignee || !formData.dueDate || !formData.priority || !formData.category) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    const subtasks = formData.subtasks
+      .filter((task) => task.trim())
+      .map((task, index) => ({
+        id: index + 1,
+        title: task.trim(),
+        completed: false,
+      }))
+
+    addTask({
+      title: formData.title,
+      description: formData.description,
+      assignee: formData.assignee,
+      dueDate: formData.dueDate,
+      priority: formData.priority,
+      status: "pending",
+      category: formData.category,
+      progress: 0,
+      subtasks,
+    })
+
+    // Reset form
+    setFormData({
+      title: "",
+      description: "",
+      assignee: "",
+      dueDate: "",
+      priority: "",
+      category: "",
+      subtasks: ["", "", ""],
+    })
+
+    setIsDialogOpen(false)
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("clubManagerAuth")
@@ -201,7 +178,12 @@ export default function TasksPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="task-title">Task Title</Label>
-                  <Input id="task-title" placeholder="Enter task title" />
+                  <Input
+                    id="task-title"
+                    placeholder="Enter task title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange("title", e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="task-description">Description</Label>
@@ -209,37 +191,38 @@ export default function TasksPage() {
                     id="task-description"
                     placeholder="Describe the task in detail..."
                     className="min-h-[100px]"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="task-assignee">Assign To</Label>
-                    <Select>
+                    <Select value={formData.assignee} onValueChange={(value) => handleInputChange("assignee", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select assignee" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="advisor">Ms. Sarah Johnson (Advisor)</SelectItem>
-                        <SelectItem value="alice">Alice Johnson</SelectItem>
-                        <SelectItem value="bob">Bob Smith</SelectItem>
-                        <SelectItem value="carol">Carol Davis</SelectItem>
-                        <SelectItem value="emma">Emma Brown</SelectItem>
-                        <SelectItem value="david">David Wilson</SelectItem>
+                        {members.map((member) => (
+                          <SelectItem key={member.id} value={member.name}>
+                            {member.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="task-category">Category</Label>
-                    <Select>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="production">Production</SelectItem>
-                        <SelectItem value="fundraising">Fundraising</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="service">Community Service</SelectItem>
-                        <SelectItem value="administrative">Administrative</SelectItem>
+                        <SelectItem value="Production">Production</SelectItem>
+                        <SelectItem value="Fundraising">Fundraising</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Service">Community Service</SelectItem>
+                        <SelectItem value="Administrative">Administrative</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -247,11 +230,16 @@ export default function TasksPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="task-due-date">Due Date</Label>
-                    <Input id="task-due-date" type="date" />
+                    <Input
+                      id="task-due-date"
+                      type="date"
+                      value={formData.dueDate}
+                      onChange={(e) => handleInputChange("dueDate", e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="task-priority">Priority</Label>
-                    <Select>
+                    <Select value={formData.priority} onValueChange={(value) => handleInputChange("priority", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
@@ -266,19 +254,21 @@ export default function TasksPage() {
                 <div className="space-y-2">
                   <Label>Subtasks (Optional)</Label>
                   <div className="space-y-2">
-                    <Input placeholder="Subtask 1" />
-                    <Input placeholder="Subtask 2" />
-                    <Input placeholder="Subtask 3" />
+                    {formData.subtasks.map((subtask, index) => (
+                      <Input
+                        key={index}
+                        placeholder={`Subtask ${index + 1}`}
+                        value={subtask}
+                        onChange={(e) => handleSubtaskChange(index, e.target.value)}
+                      />
+                    ))}
                   </div>
-                  <Button variant="outline" size="sm">
-                    Add More Subtasks
-                  </Button>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={() => setIsDialogOpen(false)}>Create Task</Button>
+                  <Button onClick={handleSubmit}>Create Task</Button>
                 </div>
               </div>
             </DialogContent>
@@ -312,7 +302,7 @@ export default function TasksPage() {
             <CardContent>
               <div className="text-2xl font-bold">{completedTasks}</div>
               <p className="text-xs text-muted-foreground">
-                {Math.round((completedTasks / totalTasks) * 100)}% completion rate
+                {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}% completion rate
               </p>
             </CardContent>
           </Card>
@@ -486,6 +476,34 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common task management operations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <Button variant="outline" className="h-16 flex-col gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Bulk Complete
+              </Button>
+              <Button variant="outline" className="h-16 flex-col gap-2">
+                <User className="h-5 w-5" />
+                Assign Tasks
+              </Button>
+              <Button variant="outline" className="h-16 flex-col gap-2">
+                <Calendar className="h-5 w-5" />
+                Set Deadlines
+              </Button>
+              <Button variant="outline" className="h-16 flex-col gap-2">
+                <ClipboardList className="h-5 w-5" />
+                Export Report
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

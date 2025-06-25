@@ -1,80 +1,92 @@
 "use client"
 
 import type React from "react"
+
+import { useState, useEffect } from "react"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
-import { useEffect, useState } from "react"
-import LoginPage from "./login/page"
+import { DataProvider } from "@/lib/data-context"
+import { ThemeProvider } from "../lib/theme-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export default function ClientLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [selectedClub, setSelectedClub] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Check authentication status
   useEffect(() => {
-    const checkAuth = () => {
-      const savedAuth = localStorage.getItem("clubManagerAuth")
-      setIsAuthenticated(savedAuth === "true")
-      setIsLoading(false)
+    const auth = localStorage.getItem("clubManagerAuth")
+    const club = localStorage.getItem("selectedClub")
+
+    if (auth && club) {
+      setIsAuthenticated(true)
+      setSelectedClub(club)
     }
-
-    checkAuth()
-
-    // Listen for storage changes (for logout from other tabs)
-    window.addEventListener("storage", checkAuth)
-    return () => window.removeEventListener("storage", checkAuth)
+    setIsLoading(false)
   }, [])
 
   const handleLogin = () => {
-    localStorage.setItem("clubManagerAuth", "true")
     setIsAuthenticated(true)
   }
 
   const handleLogout = () => {
     localStorage.removeItem("clubManagerAuth")
+    localStorage.removeItem("selectedClub")
     setIsAuthenticated(false)
+    setSelectedClub(null)
   }
 
-  // Show loading state while checking authentication
+  const handleClubSwitch = () => {
+    localStorage.removeItem("selectedClub")
+    setSelectedClub(null)
+  }
+
   if (isLoading) {
     return (
       <html lang="en">
         <body className={inter.className}>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
           </div>
         </body>
       </html>
     )
   }
 
-  // If not authenticated, show only the login page
   if (!isAuthenticated) {
     return (
       <html lang="en">
         <body className={inter.className}>
-          <LoginPage onLogin={handleLogin} />
+          <ThemeProvider>{children}</ThemeProvider>
         </body>
       </html>
     )
   }
 
-  // If authenticated, show the full app with sidebar
+  if (!selectedClub) {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </body>
+      </html>
+    )
+  }
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SidebarProvider>
-          <AppSidebar onLogout={handleLogout} />
-          <main className="flex-1">{children}</main>
-        </SidebarProvider>
+        <ThemeProvider>
+          <DataProvider>
+            <SidebarProvider>
+              <AppSidebar onLogout={handleLogout} onClubSwitch={handleClubSwitch} currentClub={selectedClub} />
+              <main className="flex-1">{children}</main>
+            </SidebarProvider>
+          </DataProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

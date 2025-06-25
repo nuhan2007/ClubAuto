@@ -19,66 +19,109 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Clock, Plus, Search, Calendar, TrendingUp, Award, Users } from "lucide-react"
 
-const hourEntries = [
-  {
-    id: 1,
-    member: "Alice Johnson",
-    date: "December 15, 2024",
-    hours: 3.5,
-    category: "Rehearsal",
-    description: "Fall play rehearsal - Act 1 scenes",
-    status: "approved",
-  },
-  {
-    id: 2,
-    member: "Bob Smith",
-    date: "December 14, 2024",
-    hours: 2.0,
-    category: "Fundraising",
-    description: "Bake sale preparation and setup",
-    status: "pending",
-  },
-  {
-    id: 3,
-    member: "Carol Davis",
-    date: "December 13, 2024",
-    hours: 4.0,
-    category: "Event Planning",
-    description: "Winter performance venue coordination",
-    status: "approved",
-  },
-  {
-    id: 4,
-    member: "David Wilson",
-    date: "December 12, 2024",
-    hours: 1.5,
-    category: "Meeting",
-    description: "Officer meeting - budget discussion",
-    status: "approved",
-  },
-  {
-    id: 5,
-    member: "Emma Brown",
-    date: "December 11, 2024",
-    hours: 5.0,
-    category: "Community Service",
-    description: "Local theater volunteer work",
-    status: "approved",
-  },
-]
-
-const memberStats = [
-  { name: "Alice Johnson", totalHours: 45.5, rank: 1 },
-  { name: "Emma Brown", totalHours: 42.0, rank: 2 },
-  { name: "Carol Davis", totalHours: 38.5, rank: 3 },
-  { name: "Bob Smith", totalHours: 35.0, rank: 4 },
-  { name: "David Wilson", totalHours: 32.5, rank: 5 },
-]
-
 export default function HourTracking() {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [hourEntries, setHourEntries] = useState([
+    {
+      id: 1,
+      member: "Alice Johnson",
+      date: "December 15, 2024",
+      hours: 3.5,
+      category: "Rehearsal",
+      description: "Fall play rehearsal - Act 1 scenes",
+      status: "approved",
+    },
+    {
+      id: 2,
+      member: "Bob Smith",
+      date: "December 14, 2024",
+      hours: 2.0,
+      category: "Fundraising",
+      description: "Bake sale preparation and setup",
+      status: "pending",
+    },
+    {
+      id: 3,
+      member: "Carol Davis",
+      date: "December 13, 2024",
+      hours: 4.0,
+      category: "Event Planning",
+      description: "Winter performance venue coordination",
+      status: "approved",
+    },
+    {
+      id: 4,
+      member: "David Wilson",
+      date: "December 12, 2024",
+      hours: 1.5,
+      category: "Meeting",
+      description: "Officer meeting - budget discussion",
+      status: "approved",
+    },
+    {
+      id: 5,
+      member: "Emma Brown",
+      date: "December 11, 2024",
+      hours: 5.0,
+      category: "Community Service",
+      description: "Local theater volunteer work",
+      status: "approved",
+    },
+  ])
+
+  const [formData, setFormData] = useState({
+    member: "",
+    date: "",
+    hours: "",
+    category: "",
+    description: "",
+  })
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = () => {
+    if (!formData.member || !formData.date || !formData.hours || !formData.category || !formData.description) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    const newEntry = {
+      id: Date.now(),
+      member: formData.member,
+      date: formData.date,
+      hours: Number.parseFloat(formData.hours),
+      category: formData.category,
+      description: formData.description,
+      status: "pending",
+    }
+
+    // Add to the beginning of the array
+    setHourEntries((prev) => [newEntry, ...prev])
+
+    // Reset form
+    setFormData({
+      member: "",
+      date: "",
+      hours: "",
+      category: "",
+      description: "",
+    })
+
+    setIsDialogOpen(false)
+  }
+
+  const memberStats = [
+    { name: "Alice Johnson", totalHours: 45.5, rank: 1 },
+    { name: "Emma Brown", totalHours: 42.0, rank: 2 },
+    { name: "Carol Davis", totalHours: 38.5, rank: 3 },
+    { name: "Bob Smith", totalHours: 35.0, rank: 4 },
+    { name: "David Wilson", totalHours: 32.5, rank: 5 },
+  ]
 
   const filteredEntries = hourEntries.filter((entry) => {
     const matchesSearch =
@@ -113,75 +156,95 @@ export default function HourTracking() {
           <SidebarTrigger />
           <h1 className="text-2xl font-bold">Hour Tracking</h1>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Log Hours
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Log Volunteer Hours</DialogTitle>
-              <DialogDescription>Record hours spent on club activities and community service.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="member">Member</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alice">Alice Johnson</SelectItem>
-                      <SelectItem value="bob">Bob Smith</SelectItem>
-                      <SelectItem value="carol">Carol Davis</SelectItem>
-                      <SelectItem value="david">David Wilson</SelectItem>
-                      <SelectItem value="emma">Emma Brown</SelectItem>
-                    </SelectContent>
-                  </Select>
+        <div className="flex items-center gap-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Log Hours
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Log Volunteer Hours</DialogTitle>
+                <DialogDescription>Record hours spent on club activities and community service.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="member">Member</Label>
+                    <Select value={formData.member} onValueChange={(value) => handleInputChange("member", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
+                        <SelectItem value="Bob Smith">Bob Smith</SelectItem>
+                        <SelectItem value="Carol Davis">Carol Davis</SelectItem>
+                        <SelectItem value="David Wilson">David Wilson</SelectItem>
+                        <SelectItem value="Emma Brown">Emma Brown</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => handleInputChange("date", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="hours">Hours</Label>
+                    <Input
+                      id="hours"
+                      type="number"
+                      step="0.5"
+                      placeholder="e.g., 2.5"
+                      value={formData.hours}
+                      onChange={(e) => handleInputChange("hours", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Rehearsal">Rehearsal</SelectItem>
+                        <SelectItem value="Meeting">Meeting</SelectItem>
+                        <SelectItem value="Fundraising">Fundraising</SelectItem>
+                        <SelectItem value="Event Planning">Event Planning</SelectItem>
+                        <SelectItem value="Community Service">Community Service</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input id="date" type="date" />
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe the activity..."
+                    className="min-h-[80px]"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit}>Log Hours</Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="hours">Hours</Label>
-                  <Input id="hours" type="number" step="0.5" placeholder="e.g., 2.5" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rehearsal">Rehearsal</SelectItem>
-                      <SelectItem value="meeting">Meeting</SelectItem>
-                      <SelectItem value="fundraising">Fundraising</SelectItem>
-                      <SelectItem value="event-planning">Event Planning</SelectItem>
-                      <SelectItem value="community-service">Community Service</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Describe the activity..." className="min-h-[80px]" />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>Log Hours</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
 
       <div className="flex-1 p-6 space-y-6">

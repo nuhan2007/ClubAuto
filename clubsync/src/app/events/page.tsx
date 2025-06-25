@@ -17,92 +17,207 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Plus, Search, MapPin, Clock, Users, LogOut, Star, AlertCircle } from "lucide-react"
-
-const events = [
-  {
-    id: 1,
-    title: "Winter Performance",
-    date: "January 20, 2025",
-    time: "7:00 PM",
-    location: "School Auditorium",
-    category: "Performance",
-    description: "Annual winter theater performance featuring scenes from classic plays.",
-    attendees: 45,
-    maxAttendees: 50,
-    status: "upcoming",
-    priority: "high",
-    organizer: "Ms. Sarah Johnson",
-  },
-  {
-    id: 2,
-    title: "Fundraiser Meeting",
-    date: "December 22, 2024",
-    time: "3:30 PM",
-    location: "Room 204",
-    category: "Meeting",
-    description: "Planning session for upcoming bake sale and car wash fundraisers.",
-    attendees: 12,
-    maxAttendees: 20,
-    status: "upcoming",
-    priority: "medium",
-    organizer: "Alice Johnson",
-  },
-  {
-    id: 3,
-    title: "Script Reading Workshop",
-    date: "January 5, 2025",
-    time: "4:00 PM",
-    location: "Drama Room",
-    category: "Workshop",
-    description: "Workshop on script analysis and character development techniques.",
-    attendees: 18,
-    maxAttendees: 25,
-    status: "upcoming",
-    priority: "medium",
-    organizer: "Bob Smith",
-  },
-  {
-    id: 4,
-    title: "Community Service Day",
-    date: "December 28, 2024",
-    time: "9:00 AM",
-    location: "Local Theater",
-    category: "Service",
-    description: "Volunteer work at the community theater - set building and maintenance.",
-    attendees: 8,
-    maxAttendees: 15,
-    status: "upcoming",
-    priority: "low",
-    organizer: "Carol Davis",
-  },
-  {
-    id: 5,
-    title: "Fall Play Wrap Party",
-    date: "December 18, 2024",
-    time: "6:00 PM",
-    location: "School Cafeteria",
-    category: "Social",
-    description: "Celebration party for the successful completion of our fall production.",
-    attendees: 24,
-    maxAttendees: 30,
-    status: "completed",
-    priority: "low",
-    organizer: "Emma Brown",
-  },
-]
+import { Calendar, Plus, Search, MapPin, Clock, Users, Star, AlertCircle } from "lucide-react"
 
 const eventCategories = ["All", "Performance", "Meeting", "Workshop", "Service", "Social", "Fundraiser"]
 
 export default function EventsPage() {
+  // Replace the existing events array with state
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      title: "Winter Performance",
+      date: "January 20, 2025",
+      time: "7:00 PM",
+      location: "School Auditorium",
+      category: "Performance",
+      description: "Annual winter theater performance featuring scenes from classic plays.",
+      attendees: 45,
+      maxAttendees: 50,
+      status: "upcoming",
+      priority: "high",
+      organizer: "Ms. Sarah Johnson",
+    },
+    {
+      id: 2,
+      title: "Fundraiser Meeting",
+      date: "December 22, 2024",
+      time: "3:30 PM",
+      location: "Room 204",
+      category: "Meeting",
+      description: "Planning session for upcoming bake sale and car wash fundraisers.",
+      attendees: 12,
+      maxAttendees: 20,
+      status: "upcoming",
+      priority: "medium",
+      organizer: "Alice Johnson",
+    },
+    {
+      id: 3,
+      title: "Script Reading Workshop",
+      date: "January 5, 2025",
+      time: "4:00 PM",
+      location: "Drama Room",
+      category: "Workshop",
+      description: "Workshop on script analysis and character development techniques.",
+      attendees: 18,
+      maxAttendees: 25,
+      status: "upcoming",
+      priority: "medium",
+      organizer: "Bob Smith",
+    },
+    {
+      id: 4,
+      title: "Community Service Day",
+      date: "December 28, 2024",
+      time: "9:00 AM",
+      location: "Local Theater",
+      category: "Service",
+      description: "Volunteer work at the community theater - set building and maintenance.",
+      attendees: 8,
+      maxAttendees: 15,
+      status: "upcoming",
+      priority: "low",
+      organizer: "Carol Davis",
+    },
+    {
+      id: 5,
+      title: "Fall Play Wrap Party",
+      date: "December 18, 2024",
+      time: "6:00 PM",
+      location: "School Cafeteria",
+      category: "Social",
+      description: "Celebration party for the successful completion of our fall production.",
+      attendees: 24,
+      maxAttendees: 30,
+      status: "completed",
+      priority: "low",
+      organizer: "Emma Brown",
+    },
+  ])
+
+  // Add form state
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "",
+    date: "",
+    time: "",
+    priority: "",
+    location: "",
+    maxAttendees: "",
+    description: "",
+    organizer: "",
+  })
+
+  // Add edit state
+  const [editingEvent, setEditingEvent] = useState<any>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  // Add edit form data
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    category: "",
+    date: "",
+    time: "",
+    priority: "",
+    location: "",
+    maxAttendees: "",
+    description: "",
+    organizer: "",
+  })
+
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
 
-  const handleLogout = () => {
-    localStorage.removeItem("clubManagerAuth")
-    window.location.reload()
+  // Add form handlers
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.date || !formData.location || !formData.organizer) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    const newEvent = {
+      id: Date.now(),
+      title: formData.title,
+      date: formData.date,
+      time: formData.time,
+      location: formData.location,
+      category: formData.category,
+      description: formData.description,
+      attendees: 0,
+      maxAttendees: Number.parseInt(formData.maxAttendees) || 50,
+      status: "upcoming",
+      priority: formData.priority,
+      organizer: formData.organizer,
+    }
+
+    // Add to the beginning of the array
+    setEvents((prev) => [newEvent, ...prev])
+
+    // Reset form
+    setFormData({
+      title: "",
+      category: "",
+      date: "",
+      time: "",
+      priority: "",
+      location: "",
+      maxAttendees: "",
+      description: "",
+      organizer: "",
+    })
+
+    setIsDialogOpen(false)
+  }
+
+  const handleEdit = (event: any) => {
+    setEditingEvent(event)
+    setEditFormData({
+      title: event.title,
+      category: event.category,
+      date: event.date,
+      time: event.time,
+      priority: event.priority,
+      location: event.location,
+      maxAttendees: event.maxAttendees.toString(),
+      description: event.description,
+      organizer: event.organizer,
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSubmit = () => {
+    if (!editFormData.title || !editFormData.date || !editFormData.location || !editFormData.organizer) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    updateEvent(editingEvent.id, {
+      title: editFormData.title,
+      date: editFormData.date,
+      time: editFormData.time,
+      location: editFormData.location,
+      category: editFormData.category,
+      description: editFormData.description,
+      maxAttendees: Number.parseInt(editFormData.maxAttendees) || 50,
+      priority: editFormData.priority,
+      organizer: editFormData.organizer,
+    })
+
+    setIsEditDialogOpen(false)
+    setEditingEvent(null)
+  }
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this event?")) {
+      deleteEvent(id)
+    }
   }
 
   const filteredEvents = events.filter((event) => {
@@ -145,6 +260,14 @@ export default function EventsPage() {
   const totalAttendees = events.reduce((sum, event) => sum + event.attendees, 0)
   const thisMonthEvents = events.filter((event) => event.date.includes("December 2024")).length
 
+  const updateEvent = (id: number, updatedEvent: any) => {
+    setEvents((prevEvents) => prevEvents.map((event) => (event.id === id ? { ...event, ...updatedEvent } : event)))
+  }
+
+  const deleteEvent = (id: number) => {
+    setEvents((prevEvents) => prevEvents.filter((event) => event.id !== id))
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex items-center justify-between px-4 py-3 border-b">
@@ -169,11 +292,16 @@ export default function EventsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="event-title">Event Title</Label>
-                    <Input id="event-title" placeholder="Enter event title" />
+                    <Input
+                      id="event-title"
+                      placeholder="Enter event title"
+                      value={formData.title}
+                      onChange={(e) => handleInputChange("title", e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="event-category">Category</Label>
-                    <Select>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -191,15 +319,25 @@ export default function EventsPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="event-date">Date</Label>
-                    <Input id="event-date" type="date" />
+                    <Input
+                      id="event-date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => handleInputChange("date", e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="event-time">Time</Label>
-                    <Input id="event-time" type="time" />
+                    <Input
+                      id="event-time"
+                      type="time"
+                      value={formData.time}
+                      onChange={(e) => handleInputChange("time", e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="event-priority">Priority</Label>
-                    <Select>
+                    <Select value={formData.priority} onValueChange={(value) => handleInputChange("priority", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Priority" />
                       </SelectTrigger>
@@ -214,29 +352,46 @@ export default function EventsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="event-location">Location</Label>
-                    <Input id="event-location" placeholder="Event location" />
+                    <Input
+                      id="event-location"
+                      placeholder="Event location"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange("location", e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="max-attendees">Max Attendees</Label>
-                    <Input id="max-attendees" type="number" placeholder="e.g., 50" />
+                    <Input
+                      id="max-attendees"
+                      type="number"
+                      placeholder="e.g., 50"
+                      value={formData.maxAttendees}
+                      onChange={(e) => handleInputChange("maxAttendees", e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="event-description">Description</Label>
-                  <Textarea id="event-description" placeholder="Describe the event..." className="min-h-[100px]" />
+                  <Textarea
+                    id="event-description"
+                    placeholder="Describe the event..."
+                    className="min-h-[100px]"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="organizer">Organizer</Label>
-                  <Select>
+                  <Select value={formData.organizer} onValueChange={(value) => handleInputChange("organizer", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select organizer" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="advisor">Ms. Sarah Johnson (Advisor)</SelectItem>
-                      <SelectItem value="alice">Alice Johnson</SelectItem>
-                      <SelectItem value="bob">Bob Smith</SelectItem>
-                      <SelectItem value="carol">Carol Davis</SelectItem>
-                      <SelectItem value="emma">Emma Brown</SelectItem>
+                      <SelectItem value="Ms. Sarah Johnson">Ms. Sarah Johnson (Advisor)</SelectItem>
+                      <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
+                      <SelectItem value="Bob Smith">Bob Smith</SelectItem>
+                      <SelectItem value="Carol Davis">Carol Davis</SelectItem>
+                      <SelectItem value="Emma Brown">Emma Brown</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,15 +399,142 @@ export default function EventsPage() {
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={() => setIsDialogOpen(false)}>Create Event</Button>
+                  <Button onClick={handleSubmit}>Create Event</Button>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Event</DialogTitle>
+                <DialogDescription>Update the event details and information.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-title">Event Title</Label>
+                    <Input
+                      id="edit-event-title"
+                      placeholder="Enter event title"
+                      value={editFormData.title}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-category">Category</Label>
+                    <Select
+                      value={editFormData.category}
+                      onValueChange={(value) => setEditFormData((prev) => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="performance">Performance</SelectItem>
+                        <SelectItem value="meeting">Meeting</SelectItem>
+                        <SelectItem value="workshop">Workshop</SelectItem>
+                        <SelectItem value="service">Community Service</SelectItem>
+                        <SelectItem value="social">Social</SelectItem>
+                        <SelectItem value="fundraiser">Fundraiser</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-date">Date</Label>
+                    <Input
+                      id="edit-event-date"
+                      type="date"
+                      value={editFormData.date}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, date: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-time">Time</Label>
+                    <Input
+                      id="edit-event-time"
+                      type="time"
+                      value={editFormData.time}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, time: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-priority">Priority</Label>
+                    <Select
+                      value={editFormData.priority}
+                      onValueChange={(value) => setEditFormData((prev) => ({ ...prev, priority: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-event-location">Location</Label>
+                    <Input
+                      id="edit-event-location"
+                      placeholder="Event location"
+                      value={editFormData.location}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, location: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-max-attendees">Max Attendees</Label>
+                    <Input
+                      id="edit-max-attendees"
+                      type="number"
+                      placeholder="e.g., 50"
+                      value={editFormData.maxAttendees}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, maxAttendees: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-event-description">Description</Label>
+                  <Textarea
+                    id="edit-event-description"
+                    placeholder="Describe the event..."
+                    className="min-h-[100px]"
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-organizer">Organizer</Label>
+                  <Select
+                    value={editFormData.organizer}
+                    onValueChange={(value) => setEditFormData((prev) => ({ ...prev, organizer: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select organizer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ms. Sarah Johnson">Ms. Sarah Johnson (Advisor)</SelectItem>
+                      <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
+                      <SelectItem value="Bob Smith">Bob Smith</SelectItem>
+                      <SelectItem value="Carol Davis">Carol Davis</SelectItem>
+                      <SelectItem value="Emma Brown">Emma Brown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleEditSubmit}>Update Event</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -396,8 +678,11 @@ export default function EventsPage() {
                     <Button variant="outline" size="sm">
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(event)}>
                       Edit
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(event.id)}>
+                      Delete
                     </Button>
                     {event.status === "upcoming" && <Button size="sm">RSVP</Button>}
                   </div>
