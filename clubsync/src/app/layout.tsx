@@ -17,9 +17,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <ClientLayout>
-            <DataProvider>
-              {children}
-            </DataProvider>
-          </ClientLayout>
+  return <html>
+            <body>
+              <ClientLayout>
+                <DataProvider>
+                  {children}
+                </DataProvider>
+              </ClientLayout>
+            </body>
+          </html>
 }

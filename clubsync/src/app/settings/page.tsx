@@ -1,352 +1,205 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { User, Bell, Shield, Database, Palette, Mail, Download, Upload, Trash2, Save, LogOut } from "lucide-react"
-import { useTheme } from "@/lib/theme-context"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Settings, Save, LogOut } from "lucide-react"
+
+interface SettingsData {
+  clubName: string
+  clubDescription: string
+  meetingDay: string
+  meetingTime: string
+  emailNotifications: boolean
+  smsNotifications: boolean
+  weeklyReports: boolean
+  eventReminders: boolean
+}
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme()
-  const [clubName, setClubName] = useState("Drama Club")
-  const [clubDescription, setClubDescription] = useState(
-    "High school drama and theater club focused on developing performing arts skills and community engagement.",
-  )
-  const [advisorName, setAdvisorName] = useState("Ms. Sarah Johnson")
-  const [advisorEmail, setAdvisorEmail] = useState("s.johnson@school.edu")
-  const [meetingDay, setMeetingDay] = useState("tuesday")
-  const [meetingTime, setMeetingTime] = useState("15:30")
+  const [settings, setSettings] = useState<SettingsData>({
+    clubName: "",
+    clubDescription: "",
+    meetingDay: "",
+    meetingTime: "",
+    emailNotifications: true,
+    smsNotifications: false,
+    weeklyReports: true,
+    eventReminders: true,
+  })
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState("")
 
-  // Notification settings
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [meetingReminders, setMeetingReminders] = useState(true)
-  const [hourApprovals, setHourApprovals] = useState(true)
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("clubSettings")
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings))
+    }
+  }, [])
+
+  const handleInputChange = (field: keyof SettingsData, value: string | boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    setSaveMessage("")
+
+    // Simulate save process
+    setTimeout(() => {
+      localStorage.setItem("clubSettings", JSON.stringify(settings))
+      setIsSaving(false)
+      setSaveMessage("Settings saved successfully!")
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSaveMessage("")
+      }, 3000)
+    }, 1000)
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("clubManagerAuth")
-    window.location.reload()
+    localStorage.removeItem("selectedClub")
+    localStorage.removeItem("clubSettings")
+    window.location.href = "/"
   }
-
-  const handleSaveSettings = () => {
-    // Save all settings to localStorage
-    const settings = {
-      clubName,
-      clubDescription,
-      advisorName,
-      advisorEmail,
-      meetingDay,
-      meetingTime,
-      theme,
-      emailNotifications,
-      meetingReminders,
-      hourApprovals,
-      savedAt: new Date().toISOString(),
-    }
-
-    localStorage.setItem("clubSettings", JSON.stringify(settings))
-
-    // Show success message
-    alert("Settings saved successfully!")
-  }
-
-  // Load settings on component mount
-  useState(() => {
-    const savedSettings = localStorage.getItem("clubSettings")
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings)
-      setClubName(settings.clubName || "Drama Club")
-      setClubDescription(settings.clubDescription || "")
-      setAdvisorName(settings.advisorName || "Ms. Sarah Johnson")
-      setAdvisorEmail(settings.advisorEmail || "s.johnson@school.edu")
-      setMeetingDay(settings.meetingDay || "tuesday")
-      setMeetingTime(settings.meetingTime || "15:30")
-      setEmailNotifications(settings.emailNotifications ?? true)
-      setMeetingReminders(settings.meetingReminders ?? true)
-      setHourApprovals(settings.hourApprovals ?? true)
-      if (settings.theme) {
-        setTheme(settings.theme)
-      }
-    }
-  })
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="flex items-center justify-between px-4 py-3 border-b">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30">
+      <header className="flex items-center justify-between px-4 py-3 border-b bg-white/80 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
-          <h1 className="text-2xl font-bold">Settings</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
+            Settings
+          </h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSaveSettings}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          className="border-red-200 text-red-700 hover:bg-red-50 bg-transparent"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
       </header>
 
       <div className="flex-1 p-6 space-y-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Club Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Club Information
-              </CardTitle>
-              <CardDescription>Basic information about your club</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="club-name">Club Name</Label>
-                <Input id="club-name" value={clubName} onChange={(e) => setClubName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="club-description">Description</Label>
-                <Textarea
-                  id="club-description"
-                  value={clubDescription}
-                  onChange={(e) => setClubDescription(e.target.value)}
-                  className="min-h-[100px]"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="advisor-name">Advisor Name</Label>
-                  <Input id="advisor-name" value={advisorName} onChange={(e) => setAdvisorName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="advisor-email">Advisor Email</Label>
-                  <Input
-                    id="advisor-email"
-                    type="email"
-                    value={advisorEmail}
-                    onChange={(e) => setAdvisorEmail(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="meeting-day">Regular Meeting Day</Label>
-                  <Select value={meetingDay} onValueChange={setMeetingDay}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="monday">Monday</SelectItem>
-                      <SelectItem value="tuesday">Tuesday</SelectItem>
-                      <SelectItem value="wednesday">Wednesday</SelectItem>
-                      <SelectItem value="thursday">Thursday</SelectItem>
-                      <SelectItem value="friday">Friday</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="meeting-time">Meeting Time</Label>
-                  <Input
-                    id="meeting-time"
-                    type="time"
-                    value={meetingTime}
-                    onChange={(e) => setMeetingTime(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notifications
-              </CardTitle>
-              <CardDescription>Configure how you receive notifications</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="email-notifications"
-                  checked={emailNotifications}
-                  onCheckedChange={setEmailNotifications}
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="email-notifications"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Email Notifications
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Receive general updates via email</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox id="meeting-reminders" checked={meetingReminders} onCheckedChange={setMeetingReminders} />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="meeting-reminders"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Meeting Reminders
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Get reminded about upcoming meetings</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox id="hour-approvals" checked={hourApprovals} onCheckedChange={setHourApprovals} />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="hour-approvals"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Hour Approval Notifications
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Get notified when hours need approval</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Appearance Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Appearance
-              </CardTitle>
-              <CardDescription>Customize the look and feel</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="theme">Theme</Label>
-                <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select defaultValue="english">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="english">English</SelectItem>
-                    <SelectItem value="spanish">Spanish</SelectItem>
-                    <SelectItem value="french">French</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Data Management
-              </CardTitle>
-              <CardDescription>Import, export, and manage your data</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Button variant="outline" className="justify-start">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export All Data
-                </Button>
-                <Button variant="outline" className="justify-start">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Member List
-                </Button>
-                <Button variant="outline" className="justify-start">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Bulk Email
-                </Button>
-              </div>
-              <div className="pt-4 border-t">
-                <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
-                <Button variant="destructive" className="justify-start">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Reset All Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Security Settings */}
-        <Card>
+        {/* Club Information */}
+        <Card className="border-blue-100 bg-white/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Security & Privacy
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <Settings className="h-5 w-5" />
+              Club Information
             </CardTitle>
-            <CardDescription>Manage access and privacy settings</CardDescription>
+            <CardDescription>Basic information about your club</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Access Control</h4>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-password">Admin Password</Label>
-                  <Input id="admin-password" type="password" placeholder="Enter new password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="member-permissions">Default Member Permissions</Label>
-                  <Select defaultValue="view-only">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="view-only">View Only</SelectItem>
-                      <SelectItem value="edit-own">Edit Own Data</SelectItem>
-                      <SelectItem value="edit-all">Edit All Data</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="clubName">Club Name</Label>
+                <Input
+                  id="clubName"
+                  value={settings.clubName}
+                  onChange={(e) => handleInputChange("clubName", e.target.value)}
+                  placeholder="Enter club name"
+                  className="bg-white/50"
+                />
               </div>
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Privacy Settings</h4>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="public-roster" />
-                  <Label htmlFor="public-roster" className="text-sm">
-                    Make member roster public
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="share-hours" />
-                  <Label htmlFor="share-hours" className="text-sm">
-                    Share volunteer hours publicly
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="allow-photos" />
-                  <Label htmlFor="allow-photos" className="text-sm">
-                    Allow photo sharing
-                  </Label>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="meetingDay">Meeting Day</Label>
+                <Input
+                  id="meetingDay"
+                  value={settings.meetingDay}
+                  onChange={(e) => handleInputChange("meetingDay", e.target.value)}
+                  placeholder="e.g., Every Tuesday"
+                  className="bg-white/50"
+                />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clubDescription">Club Description</Label>
+              <Textarea
+                id="clubDescription"
+                value={settings.clubDescription}
+                onChange={(e) => handleInputChange("clubDescription", e.target.value)}
+                placeholder="Describe your club's purpose and activities"
+                className="bg-white/50"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meetingTime">Meeting Time</Label>
+              <Input
+                id="meetingTime"
+                type="time"
+                value={settings.meetingTime}
+                onChange={(e) => handleInputChange("meetingTime", e.target.value)}
+                className="bg-white/50"
+              />
             </div>
           </CardContent>
         </Card>
+
+        {/* Notification Preferences */}
+        <Card className="border-orange-100 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-orange-800">Notification Preferences</CardTitle>
+            <CardDescription>Choose how you want to receive notifications</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="emailNotifications"
+                checked={settings.emailNotifications}
+                onCheckedChange={(checked) => handleInputChange("emailNotifications", checked as boolean)}
+              />
+              <Label htmlFor="emailNotifications">Email notifications for important updates</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="smsNotifications"
+                checked={settings.smsNotifications}
+                onCheckedChange={(checked) => handleInputChange("smsNotifications", checked as boolean)}
+              />
+              <Label htmlFor="smsNotifications">SMS notifications for urgent matters</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="weeklyReports"
+                checked={settings.weeklyReports}
+                onCheckedChange={(checked) => handleInputChange("weeklyReports", checked as boolean)}
+              />
+              <Label htmlFor="weeklyReports">Weekly activity reports</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="eventReminders"
+                checked={settings.eventReminders}
+                onCheckedChange={(checked) => handleInputChange("eventReminders", checked as boolean)}
+              />
+              <Label htmlFor="eventReminders">Event and meeting reminders</Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Save Button */}
+        <div className="flex items-center justify-between">
+          <div>{saveMessage && <p className="text-green-600 font-medium">{saveMessage}</p>}</div>
+          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
     </div>
   )
