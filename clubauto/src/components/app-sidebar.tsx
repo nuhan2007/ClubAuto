@@ -65,7 +65,7 @@ export function AppSidebar() {
             <ClipboardList className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">ClubSync</h2>
+            <h2 className="text-lg font-semibold">ClubAuto</h2>
             <p className="text-sm text-muted-foreground">Example Club</p>
           </div>
         </div>

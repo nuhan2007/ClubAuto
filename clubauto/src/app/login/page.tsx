@@ -73,7 +73,7 @@ export default function LoginPage() {
             <Users className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
-            ClubSync
+            ClubAuto
           </h1>
         </div>
 

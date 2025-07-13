@@ -34,7 +34,7 @@ export default function HomePage() {
                 <Users className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
-                ClubSync
+                ClubAuto
               </h1>
             </div>
             <div>
@@ -169,7 +169,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Why Choose ClubSync?</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">Why Choose ClubAuto?</h2>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -213,7 +213,7 @@ export default function HomePage() {
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h3>
                 <p className="text-gray-600 mb-6">
-                  Join hundreds of student organizations already using ClubSync to streamline their operations.
+                  Join hundreds of student organizations already using ClubAuto to streamline their operations.
                 </p>
                   <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                     Start Managing Your Club
@@ -232,10 +232,10 @@ export default function HomePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-orange-600 rounded-lg flex items-center justify-center">
               <Users className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-2xl font-bold">ClubSync</h3>
+            <h3 className="text-2xl font-bold">ClubAuto</h3>
           </div>
           <p className="text-gray-400 mb-4">Empowering student organizations to thrive and grow.</p>
-          <p className="text-gray-500 text-sm">© 2024 ClubSync. Built for students, by students.</p>
+          <p className="text-gray-500 text-sm">© 2024 ClubAuto. Built for students, by students.</p>
         </div>
       </footer>
     </div>
