@@ -40,9 +40,8 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.school) return
-
     setLoading(true)
+
     try {
       await createClub(formData)
       setOpen(false)
@@ -62,10 +61,6 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -90,7 +85,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Robotics Club"
                 required
               />
@@ -100,7 +95,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
               <Input
                 id="school"
                 value={formData.school}
-                onChange={(e) => handleInputChange("school", e.target.value)}
+                onChange={(e) => setFormData({ ...formData, school: e.target.value })}
                 placeholder="e.g., Lincoln High School"
                 required
               />
@@ -110,7 +105,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Brief description of your club..."
                 rows={3}
               />
@@ -121,8 +116,8 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
                 <Input
                   id="meeting_day"
                   value={formData.meeting_day}
-                  onChange={(e) => handleInputChange("meeting_day", e.target.value)}
-                  placeholder="e.g., Tuesday"
+                  onChange={(e) => setFormData({ ...formData, meeting_day: e.target.value })}
+                  placeholder="e.g., Wednesdays"
                 />
               </div>
               <div className="grid gap-2">
@@ -130,7 +125,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
                 <Input
                   id="meeting_time"
                   value={formData.meeting_time}
-                  onChange={(e) => handleInputChange("meeting_time", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, meeting_time: e.target.value })}
                   placeholder="e.g., 3:30 PM"
                 />
               </div>
@@ -140,7 +135,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
               <Input
                 id="advisor_name"
                 value={formData.advisor_name}
-                onChange={(e) => handleInputChange("advisor_name", e.target.value)}
+                onChange={(e) => setFormData({ ...formData, advisor_name: e.target.value })}
                 placeholder="e.g., Ms. Johnson"
               />
             </div>
@@ -150,7 +145,7 @@ export function CreateClubDialog({ onClubCreated }: CreateClubDialogProps) {
                 id="advisor_email"
                 type="email"
                 value={formData.advisor_email}
-                onChange={(e) => handleInputChange("advisor_email", e.target.value)}
+                onChange={(e) => setFormData({ ...formData, advisor_email: e.target.value })}
                 placeholder="e.g., advisor@school.edu"
               />
             </div>

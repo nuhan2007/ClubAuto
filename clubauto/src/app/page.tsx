@@ -7,7 +7,6 @@ import { Users, Calendar, Clock, BarChart3, CheckSquare, Settings, ArrowRight, S
 
 export default function HomePage() {
   const router = useRouter()
-  localStorage.clear()
 
 
   const handleLogin = () => {

@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Search, Users } from "lucide-react"
+import { UserPlus, Search } from "lucide-react"
 import { useData, type Club } from "@/lib/data-context"
 
 interface JoinClubDialogProps {
@@ -63,17 +61,11 @@ export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch()
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-300 bg-transparent">
-          <Users className="h-4 w-4 mr-2" />
+        <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50 bg-transparent">
+          <UserPlus className="h-4 w-4 mr-2" />
           Join Club
         </Button>
       </DialogTrigger>
@@ -83,36 +75,27 @@ export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
           <DialogDescription>Search for clubs by name or school to join as an officer.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Label htmlFor="search">Search Clubs</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="search">Search Clubs</Label>
+            <div className="flex gap-2">
               <Input
                 id="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter club name or school..."
+                placeholder="Search by club name or school..."
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
-            </div>
-            <div className="flex items-end">
               <Button onClick={handleSearch} disabled={searching || !searchQuery.trim()}>
                 <Search className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {searching && (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-sm text-muted-foreground mt-2">Searching clubs...</p>
-            </div>
-          )}
-
           {searchResults.length > 0 && (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="grid gap-2 max-h-60 overflow-y-auto">
               <Label>Search Results</Label>
               {searchResults.map((club) => (
-                <Card key={club.id} className="cursor-pointer hover:bg-gray-50">
+                <Card key={club.id} className="cursor-pointer hover:bg-accent">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div>
@@ -131,7 +114,7 @@ export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
                   </CardHeader>
                   {club.description && (
                     <CardContent className="pt-0">
-                      <p className="text-xs text-muted-foreground line-clamp-2">{club.description}</p>
+                      <p className="text-xs text-muted-foreground">{club.description}</p>
                     </CardContent>
                   )}
                 </Card>
@@ -139,15 +122,22 @@ export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
             </div>
           )}
 
-          {searchQuery && searchResults.length === 0 && !searching && (
+          {searching && (
             <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">No clubs found matching your search.</p>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-muted-foreground mt-2">Searching clubs...</p>
+            </div>
+          )}
+
+          {searchQuery && !searching && searchResults.length === 0 && (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">No clubs found. Try a different search term.</p>
             </div>
           )}
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-            Close
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>

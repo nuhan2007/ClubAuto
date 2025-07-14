@@ -4,12 +4,13 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { DataProvider } from "@/lib/data-context"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import ClientLayout from "./clientLayout"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ClubAuto - Manage Your High School Club",
+  title: "Club Manager - Manage Your High School Club",
   description:
     "A comprehensive platform for managing high school clubs, tracking attendance, organizing events, and more.",
 }
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <DataProvider>
-            <ClientLayout>{children}</ClientLayout>
+            <SidebarProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </SidebarProvider>
           </DataProvider>
         </AuthProvider>
       </body>
