@@ -17,7 +17,19 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Clock, Plus, Search, Calendar, User, CheckCircle, AlertCircle, XCircle, Edit } from "lucide-react"
+import {
+  Clock,
+  Plus,
+  Search,
+  Calendar,
+  User,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Trophy,
+  Users,
+} from "lucide-react"
 import { useData } from "@/lib/data-context"
 
 const hourCategories = [
@@ -36,6 +48,7 @@ export default function HoursPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isViewAllHoursDialogOpen, setIsViewAllHoursDialogOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState<any>(null)
   const [filterCategory, setFilterCategory] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
@@ -181,6 +194,29 @@ export default function HoursPage() {
         return null
     }
   }
+
+  // Calculate member hours more accurately
+  const memberHours = hourEntries.reduce(
+    (acc, entry) => {
+      if (entry.status === "approved") {
+        // Only count approved hours
+        if (!acc[entry.member_name]) {
+          acc[entry.member_name] = 0
+        }
+        acc[entry.member_name] += entry.hours || 0
+      }
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  // Get top 5 members by approved hours only
+  const topMembers = Object.entries(memberHours)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+
+  // Get all members with hours for the view all dialog (approved hours only)
+  const allMembersWithHours = Object.entries(memberHours).sort(([, a], [, b]) => b - a)
 
   const totalHours = hourEntries.reduce((sum, entry) => sum + (entry.hours || 0), 0)
   const approvedHours = hourEntries
@@ -420,6 +456,43 @@ export default function HoursPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* View All Member Hours Dialog */}
+          <Dialog open={isViewAllHoursDialogOpen} onOpenChange={setIsViewAllHoursDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  All Member Hours
+                </DialogTitle>
+                <DialogDescription>Complete breakdown of hours by member</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                {allMembersWithHours.map(([memberName, hours], index) => (
+                  <div key={memberName} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{memberName}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {hourEntries.filter((entry) => entry.member_name === memberName).length} entries
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{hours.toFixed(1)}</div>
+                      <div className="text-sm text-muted-foreground">hours</div>
+                    </div>
+                  </div>
+                ))}
+                {allMembersWithHours.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">No hours logged yet</div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -471,118 +544,161 @@ export default function HoursPage() {
           </Card>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search hour entries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {hourCategories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {hourStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status === "All" ? "All Status" : status.charAt(0).toUpperCase() + status.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Hour Entries List */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Search and Filters */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search hour entries..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hourCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hourStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status === "All" ? "All Status" : status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {/* Hour Entries List */}
-        <div className="space-y-4">
-          {filteredEntries.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-md transition-shadow">
+            {/* Hour Entries */}
+            <div className="space-y-4">
+              {filteredEntries.map((entry) => (
+                <Card key={entry.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2">
+                          <Clock className="h-5 w-5" />
+                          {entry.hours} hours - {entry.member_name}
+                          {getStatusIcon(entry.status)}
+                        </CardTitle>
+                        <CardDescription className="flex items-center gap-4 mt-2">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(entry.date).toLocaleDateString()}
+                          </span>
+                          {entry.category && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              {entry.category}
+                            </span>
+                          )}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {entry.category && <Badge variant="outline">{entry.category}</Badge>}
+                        {getStatusBadge(entry.status)}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {entry.description && <p className="text-sm text-muted-foreground">{entry.description}</p>}
+
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(entry)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {filteredEntries.length === 0 && (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No hour entries found</h3>
+                    <p className="text-muted-foreground text-center mb-4">
+                      {searchTerm
+                        ? "Try adjusting your search terms"
+                        : "Get started by logging your first service hours"}
+                    </p>
+                    <Button onClick={() => setIsDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Log Hours
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Top Members Sidebar */}
+          <div className="space-y-6">
+            <Card>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5" />
-                      {entry.hours} hours - {entry.member_name}
-                      {getStatusIcon(entry.status)}
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-4 mt-2">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(entry.date).toLocaleDateString()}
-                      </span>
-                      {entry.category && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          {entry.category}
-                        </span>
-                      )}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {entry.category && <Badge variant="outline">{entry.category}</Badge>}
-                    {getStatusBadge(entry.status)}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  Top 5 Members
+                </CardTitle>
+                <CardDescription>Members with the most volunteer hours</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {entry.description && <p className="text-sm text-muted-foreground">{entry.description}</p>}
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(entry)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                    {entry.status === "pending" && (
-                      <>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                          Approve
-                        </Button>
-                        <Button variant="destructive" size="sm">
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                <div className="space-y-3">
+                  {topMembers.map(([memberName, hours], index) => (
+                    <div key={memberName} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0
+                              ? "bg-yellow-500 text-white"
+                              : index === 1
+                                ? "bg-gray-400 text-white"
+                                : index === 2
+                                  ? "bg-orange-600 text-white"
+                                  : "bg-gray-200 text-gray-600"
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="font-medium text-sm">{memberName}</span>
+                      </div>
+                      <span className="text-sm font-bold">{hours.toFixed(1)}h</span>
+                    </div>
+                  ))}
+                  {topMembers.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No hours logged yet</div>
+                  )}
                 </div>
+                <Button
+                  variant="outline"
+                  className="w-full mt-4 bg-transparent"
+                  onClick={() => setIsViewAllHoursDialogOpen(true)}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  View All Members
+                </Button>
               </CardContent>
             </Card>
-          ))}
+          </div>
         </div>
-
-        {filteredEntries.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No hour entries found</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                {searchTerm ? "Try adjusting your search terms" : "Get started by logging your first service hours"}
-              </p>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Log Hours
-              </Button>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )

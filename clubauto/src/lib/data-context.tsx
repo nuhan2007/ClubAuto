@@ -148,6 +148,8 @@ interface DataContextType {
   approveJoinRequest: (requestId: string) => Promise<void>
   rejectJoinRequest: (requestId: string) => Promise<void>
   generateClubCode: () => Promise<void>
+  updateClubSettings: (updates: Partial<Club>) => Promise<void>
+  deleteAccount: () => Promise<void>
 
   // Data management
   addMember: (member: Partial<Member>) => Promise<void>
@@ -430,6 +432,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
           .eq("id", user.id)
           .single()
 
+        // Get existing requests
+        const existingRequests = JSON.parse(localStorage.getItem(`join_requests_${club.id}`) || "[]")
+
+        // Check if there's a pending request
+        const pendingRequest = existingRequests.find(
+          (req: JoinRequest) => req.user_id === user.id && req.status === "pending",
+        )
+        if (pendingRequest) {
+          throw new Error("You have already requested to join this club")
+        }
+
         // Create join request (stored in localStorage for now)
         const joinRequest: JoinRequest = {
           id: Date.now().toString(),
@@ -441,17 +454,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
           requested_at: new Date().toISOString(),
         }
 
-        // Store in localStorage
-        const existingRequests = JSON.parse(localStorage.getItem(`join_requests_${club.id}`) || "[]")
+        // Remove any old rejected requests from the same user
+        const filteredRequests = existingRequests.filter(
+          (req: JoinRequest) => !(req.user_id === user.id && req.status === "rejected"),
+        )
 
-        // Check if request already exists
-        const existingRequest = existingRequests.find((req: JoinRequest) => req.user_id === user.id)
-        if (existingRequest) {
-          throw new Error("You have already requested to join this club")
-        }
-
-        existingRequests.push(joinRequest)
-        localStorage.setItem(`join_requests_${club.id}`, JSON.stringify(existingRequests))
+        filteredRequests.push(joinRequest)
+        localStorage.setItem(`join_requests_${club.id}`, JSON.stringify(filteredRequests))
 
         console.log("Join request created successfully")
       } catch (error) {
@@ -478,8 +487,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
           throw new Error("Join request not found")
         }
 
-        // Add user to club in Supabase
-        const { error } = await supabase.from("club_members").insert([
+        console.log("Processing join request:", request)
+
+        // First, check if user already exists in club_members
+        const { data: existingMember, error: checkError } = await supabase
+          .from("club_members")
+          .select("id")
+          .eq("user_id", request.user_id)
+          .eq("club_id", currentClub.id)
+          .single()
+
+        if (checkError && checkError.code !== "PGRST116") {
+          // PGRST116 is "not found" error
+          console.error("Error checking existing membership:", checkError)
+          throw checkError
+        }
+
+        if (existingMember) {
+          console.log("User is already a member of this club")
+          // Remove the request since user is already a member
+          const updatedRequests = existingRequests.filter((req) => req.id !== requestId)
+          localStorage.setItem(`join_requests_${currentClub.id}`, JSON.stringify(updatedRequests))
+          setJoinRequests(updatedRequests)
+          return
+        }
+
+        // Add user to club in Supabase (user should already exist in user_profiles)
+        const { error: insertError } = await supabase.from("club_members").insert([
           {
             user_id: request.user_id,
             club_id: currentClub.id,
@@ -487,16 +521,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
           },
         ])
 
-        if (error) throw error
+        if (insertError) {
+          console.error("Error adding user to club:", insertError)
+          throw insertError
+        }
 
-        // Update request status and save back to localStorage
-        const updatedRequests = existingRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "approved" as const } : req,
-        )
+        // Remove the request entirely from localStorage (since it's approved)
+        const updatedRequests = existingRequests.filter((req) => req.id !== requestId)
         localStorage.setItem(`join_requests_${currentClub.id}`, JSON.stringify(updatedRequests))
 
-        // Refresh join requests
+        // Update local state
         setJoinRequests(updatedRequests)
+
+        console.log("Join request approved successfully")
       } catch (error) {
         console.error("Error approving join request:", error)
         throw error
@@ -516,14 +553,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
           localStorage.getItem(`join_requests_${currentClub.id}`) || "[]",
         )
 
-        // Update request status and save back to localStorage
-        const updatedRequests = existingRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "rejected" as const } : req,
-        )
+        // Remove the request entirely from localStorage (allow re-requesting)
+        const updatedRequests = existingRequests.filter((req) => req.id !== requestId)
         localStorage.setItem(`join_requests_${currentClub.id}`, JSON.stringify(updatedRequests))
 
-        // Refresh join requests
+        // Update local state
         setJoinRequests(updatedRequests)
+
+        console.log("Join request rejected successfully")
       } catch (error) {
         console.error("Error rejecting join request:", error)
         throw error
@@ -566,6 +603,78 @@ export function DataProvider({ children }: { children: ReactNode }) {
       throw error
     }
   }, [currentClub, loadUserClubs])
+
+  // Update club settings
+  const updateClubSettings = useCallback(
+    async (updates: Partial<Club>): Promise<void> => {
+      if (!currentClub) return
+
+      try {
+        const { error } = await supabase.from("clubs").update(updates).eq("id", currentClub.id)
+
+        if (error) {
+          console.error("Error updating club settings:", error)
+          throw error
+        }
+
+        // Update current club state
+        setCurrentClub({ ...currentClub, ...updates })
+
+        // Refresh user clubs
+        await loadUserClubs()
+
+        console.log("Club settings updated successfully")
+      } catch (error) {
+        console.error("Error updating club settings:", error)
+        throw error
+      }
+    },
+    [currentClub, loadUserClubs],
+  )
+
+  // Delete account
+  const deleteAccount = useCallback(async (): Promise<void> => {
+    if (!user) return
+
+    try {
+      // Delete user from all club memberships first
+      const { error: memberError } = await supabase.from("club_members").delete().eq("user_id", user.id)
+
+      if (memberError) {
+        console.error("Error removing user from clubs:", memberError)
+        throw memberError
+      }
+
+      // Delete user profile
+      const { error: profileError } = await supabase.from("user_profiles").delete().eq("id", user.id)
+
+      if (profileError) {
+        console.error("Error deleting user profile:", profileError)
+        throw profileError
+      }
+
+      // Sign out the user from Supabase auth
+      const { error: signOutError } = await supabase.auth.signOut()
+
+      if (signOutError) {
+        console.error("Error signing out:", signOutError)
+        throw signOutError
+      }
+
+      // Clear local storage
+      localStorage.removeItem("clubManagerAuth")
+      localStorage.removeItem("selectedClub")
+      localStorage.removeItem("clubSettings")
+
+      // Redirect to login
+      window.location.href = "/"
+
+      console.log("Account deleted successfully")
+    } catch (error) {
+      console.error("Error deleting account:", error)
+      throw error
+    }
+  }, [user])
 
   // Search clubs (keeping for compatibility)
   const searchClubs = useCallback(async (query: string): Promise<Club[]> => {
@@ -1119,6 +1228,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         approveJoinRequest,
         rejectJoinRequest,
         generateClubCode,
+        updateClubSettings,
+        deleteAccount,
         addMember,
         updateMember,
         deleteMember,

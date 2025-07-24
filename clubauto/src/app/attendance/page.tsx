@@ -20,10 +20,11 @@ import { Users, Plus, Search, Calendar, TrendingUp, UserCheck, UserX } from "luc
 import { useData } from "@/lib/data-context"
 
 export default function Attendance() {
-  const { members, attendanceRecords, addAttendanceRecord, loading } = useData()
+  const { members, attendanceRecords, addAttendanceRecord, updateMember, loading } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<number[]>([])
+  const [showAllRecords, setShowAllRecords] = useState(false)
 
   const [formData, setFormData] = useState({
     eventName: "",
@@ -48,6 +49,32 @@ export default function Attendance() {
         absent_count: members.length - selectedMembers.length,
         total_count: members.length,
       })
+
+      // Update attendance percentage for each member based on their actual attendance
+      const totalEvents = attendanceRecords.length + 1 // Including this new record
+
+      for (const member of members) {
+        const wasPresent = selectedMembers.includes(member.id)
+        const currentPercentage = member.attendance_percentage || 0
+
+        // Calculate new percentage based on whether they were present
+        // This assumes equal weight for each event
+        let newPercentage
+        if (totalEvents === 1) {
+          // First event
+          newPercentage = wasPresent ? 100 : 0
+        } else {
+          // Calculate based on previous percentage and current attendance
+          const previousTotal = (currentPercentage * (totalEvents - 1)) / 100
+          const newTotal = previousTotal + (wasPresent ? 1 : 0)
+          newPercentage = Math.round((newTotal / totalEvents) * 100)
+        }
+
+        // Update member's attendance percentage
+        await updateMember(member.id, {
+          attendance_percentage: newPercentage,
+        })
+      }
 
       // Reset form
       setFormData({ eventName: "", eventDate: "" })
@@ -82,6 +109,9 @@ export default function Attendance() {
       : 0
   const perfectAttendance = members.filter((member) => (member.attendance_percentage || 0) === 100).length
   const atRisk = members.filter((member) => (member.attendance_percentage || 0) < 80).length
+
+  // Show only 3 most recent records unless "View All" is clicked
+  const displayedRecords = showAllRecords ? attendanceRecords : attendanceRecords.slice(0, 3)
 
   if (loading) {
     return (
@@ -272,8 +302,8 @@ export default function Attendance() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {attendanceRecords.length > 0 ? (
-                  attendanceRecords.slice(0, 5).map((record) => (
+                {displayedRecords.length > 0 ? (
+                  displayedRecords.map((record) => (
                     <div key={record.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium">{record.event_name}</h4>
@@ -314,9 +344,15 @@ export default function Attendance() {
                   </div>
                 )}
 
-                <Button variant="outline" className="w-full bg-transparent">
-                  View All Records
-                </Button>
+                {attendanceRecords.length > 3 && (
+                  <Button
+                    variant="outline"
+                    className="w-full bg-transparent"
+                    onClick={() => setShowAllRecords(!showAllRecords)}
+                  >
+                    {showAllRecords ? "Show Recent Only" : "View All Records"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

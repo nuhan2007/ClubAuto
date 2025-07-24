@@ -17,7 +17,7 @@ export default function Dashboard() {
   const totalMembers = members.length
   const activeMembers = members.filter((m) => m.status === "active").length
   const averageAttendance =
-    members.length > 0 ? Math.round(members.reduce((sum, member) => sum + member.attendance, 0) / members.length) : 0
+    members.length > 0 ? Math.round(members.reduce((sum, member) => sum + member.attendance_percentage, 0) / members.length) : 0
 
   // Get current month meetings
   const thisMonthMeetings = meetingNotes.filter((note) =>
@@ -186,7 +186,7 @@ export default function Dashboard() {
                 variant="outline"
                 className="w-full border-orange-200 text-orange-700 hover:bg-orange-50 bg-transparent"
               >
-                View Calendar
+                View Events
               </Button>
             </CardContent>
           </Card>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Plus, Search, MapPin, Clock, Users, Star, AlertCircle } from "lucide-react"
+import { Calendar, Plus, Search, MapPin, Clock, Users, Star, AlertCircle, Trash2 } from "lucide-react"
 import { useData } from "@/lib/data-context"
 
 const eventCategories = ["All", "Performance", "Meeting", "Workshop", "Service", "Social", "Fundraiser"]
@@ -26,6 +26,8 @@ export default function EventsPage() {
   const { events, addEvent, updateEvent, deleteEvent, members, loading } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deletingEvent, setDeletingEvent] = useState<any>(null)
   const [filterCategory, setFilterCategory] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
 
@@ -148,14 +150,21 @@ export default function EventsPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this event?")) {
-      try {
-        await deleteEvent(id)
-      } catch (error) {
-        console.error("Error deleting event:", error)
-        alert("Failed to delete event. Please try again.")
-      }
+  const handleDeleteClick = (event: any) => {
+    setDeletingEvent(event)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingEvent) return
+
+    try {
+      await deleteEvent(deletingEvent.id)
+      setIsDeleteDialogOpen(false)
+      setDeletingEvent(null)
+    } catch (error) {
+      console.error("Error deleting event:", error)
+      alert("Failed to delete event. Please try again.")
     }
   }
 
@@ -488,6 +497,30 @@ export default function EventsPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-700">
+                  <Trash2 className="h-5 w-5" />
+                  Delete Event
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete "{deletingEvent?.title}"? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteConfirm}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -645,16 +678,18 @@ export default function EventsPage() {
                     )}
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEdit(event)}>
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(event.id)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(event)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
                       Delete
                     </Button>
-                    {event.status === "upcoming" && <Button size="sm">RSVP</Button>}
                   </div>
                 </div>
               </CardContent>

@@ -6,98 +6,98 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Settings, Save, LogOut, Copy, RefreshCw, Users, Shield } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Settings, LogOut, Copy, RefreshCw, Users, Shield, Trash2, AlertTriangle } from "lucide-react"
 import { useData } from "@/lib/data-context"
 
-interface SettingsData {
-  clubName: string
-  clubDescription: string
-  meetingDay: string
-  meetingTime: string
-  emailNotifications: boolean
-  smsNotifications: boolean
-  weeklyReports: boolean
-  eventReminders: boolean
-}
-
 export default function SettingsPage() {
-  const { currentClub, generateClubCode, joinRequests, approveJoinRequest, rejectJoinRequest, loadJoinRequests } =
-    useData()
-  const [settings, setSettings] = useState<SettingsData>({
+  const {
+    currentClub,
+    generateClubCode,
+    joinRequests,
+    approveJoinRequest,
+    rejectJoinRequest,
+    updateClubSettings,
+    deleteAccount,
+  } = useData()
+  const [message, setMessage] = useState("")
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Form state for club settings
+  const [formData, setFormData] = useState({
     clubName: "",
     clubDescription: "",
     meetingDay: "",
     meetingTime: "",
-    emailNotifications: true,
-    smsNotifications: false,
-    weeklyReports: true,
-    eventReminders: true,
+    advisorName: "",
+    advisorEmail: "",
   })
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveMessage, setSaveMessage] = useState("")
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
 
-  // Load settings from current club and localStorage on mount
+  // Load settings from current club on mount and when club changes
   useEffect(() => {
     if (currentClub) {
-      setSettings((prev) => ({
-        ...prev,
+      setFormData({
         clubName: currentClub.name || "",
         clubDescription: currentClub.description || "",
         meetingDay: currentClub.meeting_day || "",
         meetingTime: currentClub.meeting_time || "",
-      }))
-    }
-
-    const savedSettings = localStorage.getItem("clubSettings")
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      setSettings((prev) => ({
-        ...prev,
-        emailNotifications: parsed.emailNotifications ?? true,
-        smsNotifications: parsed.smsNotifications ?? false,
-        weeklyReports: parsed.weeklyReports ?? true,
-        eventReminders: parsed.eventReminders ?? true,
-      }))
+        advisorName: currentClub.advisor_name || "",
+        advisorEmail: currentClub.advisor_email || "",
+      })
     }
   }, [currentClub])
 
-  // Load join requests when component mounts
-  useEffect(() => {
-    loadJoinRequests()
-  }, [loadJoinRequests])
-
-  const handleInputChange = (field: keyof SettingsData, value: string | boolean) => {
-    setSettings((prev) => ({
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }))
   }
 
-  const handleSave = async () => {
+  const handleSaveSettings = async () => {
+    if (!currentClub) return
+
     setIsSaving(true)
-    setSaveMessage("")
+    try {
+      const updates = {
+        name: formData.clubName,
+        description: formData.clubDescription,
+        meeting_day: formData.meetingDay,
+        meeting_time: formData.meetingTime,
+        advisor_name: formData.advisorName,
+        advisor_email: formData.advisorEmail,
+      }
 
-    // Simulate save process
-    setTimeout(() => {
-      localStorage.setItem("clubSettings", JSON.stringify(settings))
+      await updateClubSettings(updates)
+      setMessage("Settings saved successfully!")
+      setTimeout(() => setMessage(""), 3000)
+    } catch (error) {
+      console.error("Error updating settings:", error)
+      setMessage("Failed to save settings. Please try again.")
+      setTimeout(() => setMessage(""), 3000)
+    } finally {
       setIsSaving(false)
-      setSaveMessage("Settings saved successfully!")
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSaveMessage("")
-      }, 3000)
-    }, 1000)
+    }
   }
 
   const handleCopyClubCode = () => {
     if (currentClub?.club_code) {
       navigator.clipboard.writeText(currentClub.club_code)
-      setSaveMessage("Club code copied to clipboard!")
-      setTimeout(() => setSaveMessage(""), 3000)
+      setMessage("Club code copied to clipboard!")
+      setTimeout(() => setMessage(""), 3000)
     }
   }
 
@@ -105,11 +105,12 @@ export default function SettingsPage() {
     setIsGeneratingCode(true)
     try {
       await generateClubCode()
-      setSaveMessage("New club code generated successfully!")
-      setTimeout(() => setSaveMessage(""), 3000)
+      setMessage("New club code generated successfully!")
+      setTimeout(() => setMessage(""), 3000)
     } catch (error) {
       console.error("Error generating club code:", error)
-      setSaveMessage("Failed to generate new club code")
+      setMessage("Failed to generate new club code")
+      setTimeout(() => setMessage(""), 3000)
     } finally {
       setIsGeneratingCode(false)
     }
@@ -118,29 +119,48 @@ export default function SettingsPage() {
   const handleApproveRequest = async (requestId: string) => {
     try {
       await approveJoinRequest(requestId)
-      setSaveMessage("Join request approved!")
-      setTimeout(() => setSaveMessage(""), 3000)
+      setMessage("Join request approved!")
+      setTimeout(() => setMessage(""), 3000)
     } catch (error) {
       console.error("Error approving request:", error)
-      setSaveMessage("Failed to approve request")
+      setMessage("Failed to approve request")
+      setTimeout(() => setMessage(""), 3000)
     }
   }
 
   const handleRejectRequest = async (requestId: string) => {
     try {
       await rejectJoinRequest(requestId)
-      setSaveMessage("Join request rejected")
-      setTimeout(() => setSaveMessage(""), 3000)
+      setMessage("Join request rejected")
+      setTimeout(() => setMessage(""), 3000)
     } catch (error) {
       console.error("Error rejecting request:", error)
-      setSaveMessage("Failed to reject request")
+      setMessage("Failed to reject request")
+      setTimeout(() => setMessage(""), 3000)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE MY ACCOUNT") {
+      setMessage("Please type 'DELETE MY ACCOUNT' to confirm")
+      setTimeout(() => setMessage(""), 3000)
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await deleteAccount()
+    } catch (error) {
+      console.error("Error deleting account:", error)
+      setMessage("Failed to delete account")
+      setTimeout(() => setMessage(""), 3000)
+      setIsDeleting(false)
     }
   }
 
   const handleLogout = () => {
     localStorage.removeItem("clubManagerAuth")
     localStorage.removeItem("selectedClub")
-    localStorage.removeItem("clubSettings")
     window.location.href = "/"
   }
 
@@ -166,6 +186,19 @@ export default function SettingsPage() {
       </header>
 
       <div className="flex-1 p-6 space-y-6">
+        {/* Status Message */}
+        {message && (
+          <div
+            className={`text-sm p-3 rounded-md ${
+              message.includes("Failed") || message.includes("Error")
+                ? "text-red-700 bg-red-50 border border-red-200"
+                : "text-green-700 bg-green-50 border border-green-200"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
         {/* Club Code Section */}
         <Card className="border-green-100 bg-white/80 backdrop-blur-sm">
           <CardHeader>
@@ -272,7 +305,7 @@ export default function SettingsPage() {
                 <Label htmlFor="clubName">Club Name</Label>
                 <Input
                   id="clubName"
-                  value={settings.clubName}
+                  value={formData.clubName}
                   onChange={(e) => handleInputChange("clubName", e.target.value)}
                   placeholder="Enter club name"
                   className="bg-white/50"
@@ -282,7 +315,7 @@ export default function SettingsPage() {
                 <Label htmlFor="meetingDay">Meeting Day</Label>
                 <Input
                   id="meetingDay"
-                  value={settings.meetingDay}
+                  value={formData.meetingDay}
                   onChange={(e) => handleInputChange("meetingDay", e.target.value)}
                   placeholder="e.g., Every Tuesday"
                   className="bg-white/50"
@@ -293,76 +326,116 @@ export default function SettingsPage() {
               <Label htmlFor="clubDescription">Club Description</Label>
               <Textarea
                 id="clubDescription"
-                value={settings.clubDescription}
+                value={formData.clubDescription}
                 onChange={(e) => handleInputChange("clubDescription", e.target.value)}
                 placeholder="Describe your club's purpose and activities"
                 className="bg-white/50"
                 rows={3}
               />
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="meetingTime">Meeting Time</Label>
+                <Input
+                  id="meetingTime"
+                  type="time"
+                  value={formData.meetingTime}
+                  onChange={(e) => handleInputChange("meetingTime", e.target.value)}
+                  className="bg-white/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="advisorName">Advisor Name</Label>
+                <Input
+                  id="advisorName"
+                  value={formData.advisorName}
+                  onChange={(e) => handleInputChange("advisorName", e.target.value)}
+                  placeholder="Enter advisor name"
+                  className="bg-white/50"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="meetingTime">Meeting Time</Label>
+              <Label htmlFor="advisorEmail">Advisor Email</Label>
               <Input
-                id="meetingTime"
-                type="time"
-                value={settings.meetingTime}
-                onChange={(e) => handleInputChange("meetingTime", e.target.value)}
+                id="advisorEmail"
+                type="email"
+                value={formData.advisorEmail}
+                onChange={(e) => handleInputChange("advisorEmail", e.target.value)}
+                placeholder="Enter advisor email"
                 className="bg-white/50"
               />
             </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSaveSettings}
+                disabled={isSaving}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isSaving ? "Saving..." : "Save Settings"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Notification Preferences */}
-        <Card className="border-orange-100 bg-white/80 backdrop-blur-sm">
+        {/* Danger Zone */}
+        <Card className="border-red-200 bg-white/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-orange-800">Notification Preferences</CardTitle>
-            <CardDescription>Choose how you want to receive notifications</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>Irreversible actions that will permanently delete your data</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="emailNotifications"
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleInputChange("emailNotifications", checked as boolean)}
-              />
-              <Label htmlFor="emailNotifications">Email notifications for important updates</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="smsNotifications"
-                checked={settings.smsNotifications}
-                onCheckedChange={(checked) => handleInputChange("smsNotifications", checked as boolean)}
-              />
-              <Label htmlFor="smsNotifications">SMS notifications for urgent matters</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="weeklyReports"
-                checked={settings.weeklyReports}
-                onCheckedChange={(checked) => handleInputChange("weeklyReports", checked as boolean)}
-              />
-              <Label htmlFor="weeklyReports">Weekly activity reports</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="eventReminders"
-                checked={settings.eventReminders}
-                onCheckedChange={(checked) => handleInputChange("eventReminders", checked as boolean)}
-              />
-              <Label htmlFor="eventReminders">Event and meeting reminders</Label>
-            </div>
+          <CardContent>
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 bg-transparent">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-red-700">
+                    <AlertTriangle className="h-5 w-5" />
+                    Delete Account
+                  </DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete your account and remove you from all
+                    clubs. Your club data will remain, but you will lose access to it.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmDelete">
+                      Type <strong>DELETE MY ACCOUNT</strong> to confirm:
+                    </Label>
+                    <Input
+                      id="confirmDelete"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="DELETE MY ACCOUNT"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting || deleteConfirmText !== "DELETE MY ACCOUNT"}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Account"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
-
-        {/* Save Button */}
-        <div className="flex items-center justify-between">
-          <div>{saveMessage && <p className="text-green-600 font-medium">{saveMessage}</p>}</div>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
       </div>
     </div>
   )

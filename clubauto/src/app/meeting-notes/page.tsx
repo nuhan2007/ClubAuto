@@ -17,15 +17,19 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Plus, Search, Calendar, Users, Clock, CheckSquare, Edit } from "lucide-react"
+import { FileText, Plus, Search, Calendar, Users, Clock, CheckSquare, Edit, Trash2, Eye } from "lucide-react"
 import { useData } from "@/lib/data-context"
 
 export default function MeetingNotesPage() {
-  const { meetingNotes, addMeetingNote, updateMeetingNote, loading } = useData()
+  const { meetingNotes, addMeetingNote, updateMeetingNote, deleteMeetingNote, loading } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<any>(null)
+  const [viewingNote, setViewingNote] = useState<any>(null)
+  const [deletingNote, setDeletingNote] = useState<any>(null)
   const [filterStatus, setFilterStatus] = useState("All")
 
   const [formData, setFormData] = useState({
@@ -115,6 +119,29 @@ export default function MeetingNotesPage() {
       actionItems: note.action_items?.length > 0 ? [...note.action_items, "", ""].slice(0, 3) : ["", "", ""],
     })
     setIsEditDialogOpen(true)
+  }
+
+  const handleView = (note: any) => {
+    setViewingNote(note)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleDeleteClick = (note: any) => {
+    setDeletingNote(note)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingNote) return
+
+    try {
+      await deleteMeetingNote(deletingNote.id)
+      setIsDeleteDialogOpen(false)
+      setDeletingNote(null)
+    } catch (error) {
+      console.error("Error deleting meeting note:", error)
+      alert("Failed to delete meeting note. Please try again.")
+    }
   }
 
   const handleEditSubmit = async () => {
@@ -384,6 +411,108 @@ export default function MeetingNotesPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* View Meeting Notes Dialog */}
+          <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {viewingNote?.title}
+                </DialogTitle>
+                <DialogDescription>
+                  Meeting held on {viewingNote && new Date(viewingNote.date).toLocaleDateString()}
+                </DialogDescription>
+              </DialogHeader>
+              {viewingNote && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground">Date</h4>
+                      <p>{new Date(viewingNote.date).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground">Status</h4>
+                      <div className="mt-1">{getStatusBadge(viewingNote.status)}</div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground">Attendees</h4>
+                      <p>{viewingNote.attendees} people</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground">Duration</h4>
+                      <p>{viewingNote.duration || "Not specified"}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Meeting Summary</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="whitespace-pre-wrap">{viewingNote.summary}</p>
+                    </div>
+                  </div>
+
+                  {viewingNote.action_items && viewingNote.action_items.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                        <CheckSquare className="h-4 w-4" />
+                        Action Items
+                      </h4>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <ul className="space-y-2">
+                          {viewingNote.action_items.map((item: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+                      Close
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsViewDialogOpen(false)
+                        handleEdit(viewingNote)
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Notes
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-700">
+                  <Trash2 className="h-5 w-5" />
+                  Delete Meeting Notes
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete "{deletingNote?.title}"? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteConfirm}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -515,14 +644,23 @@ export default function MeetingNotesPage() {
                   )}
 
                   <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleView(note)}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Full Notes
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEdit(note)}>
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm">
-                      View Full Notes
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(note)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
                     </Button>
-                    <Button size="sm">Export PDF</Button>
                   </div>
                 </div>
               </CardContent>
