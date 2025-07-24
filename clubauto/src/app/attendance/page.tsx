@@ -20,7 +20,7 @@ import { Users, Plus, Search, Calendar, TrendingUp, UserCheck, UserX } from "luc
 import { useData } from "@/lib/data-context"
 
 export default function Attendance() {
-  const { members, attendanceRecords, addAttendanceRecord } = useData()
+  const { members, attendanceRecords, addAttendanceRecord, loading } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<number[]>([])
@@ -34,30 +34,35 @@ export default function Attendance() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.eventName || !formData.eventDate) {
       alert("Please fill in event name and date")
       return
     }
 
-    addAttendanceRecord({
-      date: formData.eventDate,
-      event: formData.eventName,
-      present: selectedMembers.length,
-      absent: members.length - selectedMembers.length,
-      total: members.length,
-    })
+    try {
+      await addAttendanceRecord({
+        event_date: formData.eventDate,
+        event_name: formData.eventName,
+        present_count: selectedMembers.length,
+        absent_count: members.length - selectedMembers.length,
+        total_count: members.length,
+      })
 
-    // Reset form
-    setFormData({ eventName: "", eventDate: "" })
-    setSelectedMembers([])
-    setIsDialogOpen(false)
+      // Reset form
+      setFormData({ eventName: "", eventDate: "" })
+      setSelectedMembers([])
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding attendance record:", error)
+      alert("Failed to save attendance record. Please try again.")
+    }
   }
 
   const filteredMembers = members.filter(
     (member) =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
   const handleMemberToggle = (memberId: number) => {
@@ -72,9 +77,30 @@ export default function Attendance() {
 
   // Calculate real stats
   const averageAttendance =
-    members.length > 0 ? Math.round(members.reduce((sum, member) => sum + member.attendance, 0) / members.length) : 0
-  const perfectAttendance = members.filter((member) => member.attendance === 100).length
-  const atRisk = members.filter((member) => member.attendance < 80).length
+    members.length > 0
+      ? Math.round(members.reduce((sum, member) => sum + (member.attendance_percentage || 0), 0) / members.length)
+      : 0
+  const perfectAttendance = members.filter((member) => (member.attendance_percentage || 0) === 100).length
+  const atRisk = members.filter((member) => (member.attendance_percentage || 0) < 80).length
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold">Attendance Tracking</h1>
+          </div>
+        </header>
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading attendance data...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -225,8 +251,8 @@ export default function Attendance() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{member.attendance}%</span>
-                        {getAttendanceBadge(member.attendance)}
+                        <span className="text-sm font-medium">{member.attendance_percentage || 0}%</span>
+                        {getAttendanceBadge(member.attendance_percentage || 0)}
                       </div>
                     </div>
                   ))}
@@ -247,23 +273,25 @@ export default function Attendance() {
             <CardContent>
               <div className="space-y-4">
                 {attendanceRecords.length > 0 ? (
-                  attendanceRecords.map((record) => (
+                  attendanceRecords.slice(0, 5).map((record) => (
                     <div key={record.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{record.event}</h4>
-                        <span className="text-sm text-muted-foreground">{record.date}</span>
+                        <h4 className="font-medium">{record.event_name}</h4>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(record.event_date).toLocaleDateString()}
+                        </span>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div className="text-center">
-                          <div className="text-lg font-bold text-green-600">{record.present}</div>
+                          <div className="text-lg font-bold text-green-600">{record.present_count}</div>
                           <div className="text-muted-foreground">Present</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-bold text-red-600">{record.absent}</div>
+                          <div className="text-lg font-bold text-red-600">{record.absent_count}</div>
                           <div className="text-muted-foreground">Absent</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-bold">{record.total}</div>
+                          <div className="text-lg font-bold">{record.total_count}</div>
                           <div className="text-muted-foreground">Total</div>
                         </div>
                       </div>
@@ -271,11 +299,11 @@ export default function Attendance() {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-green-600 h-2 rounded-full"
-                            style={{ width: `${(record.present / record.total) * 100}%` }}
+                            style={{ width: `${(record.present_count / record.total_count) * 100}%` }}
                           ></div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {Math.round((record.present / record.total) * 100)}% attendance rate
+                          {Math.round((record.present_count / record.total_count) * 100)}% attendance rate
                         </p>
                       </div>
                     </div>
@@ -286,7 +314,7 @@ export default function Attendance() {
                   </div>
                 )}
 
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full bg-transparent">
                   View All Records
                 </Button>
               </div>

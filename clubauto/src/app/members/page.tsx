@@ -18,9 +18,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Users, Plus, Search, Mail, Phone, Calendar, Edit, Trash2, UserPlus, LogOut } from "lucide-react"
 import { useData } from "@/lib/data-context"
+import { useAuth } from "@/lib/auth-context"
 
 export default function MembersPage() {
-  const { members, addMember, deleteMember } = useData()
+  const { members, addMember, deleteMember, loading } = useData()
+  const { signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [filterRole, setFilterRole] = useState("All")
@@ -34,54 +36,67 @@ export default function MembersPage() {
     role: "Member",
   })
 
-  const handleLogout = () => {
-    localStorage.removeItem("clubManagerAuth")
-    window.location.reload()
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.grade || !formData.email) {
       alert("Please fill in all required fields")
       return
     }
 
-    addMember({
-      name: formData.name,
-      grade: formData.grade,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      joinDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      attendance: 0,
-      status: "active",
-    })
+    try {
+      await addMember({
+        name: formData.name,
+        grade: formData.grade,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        join_date: new Date().toISOString().split("T")[0],
+        attendance_percentage: 0,
+        status: "active",
+      })
 
-    // Reset form
-    setFormData({
-      name: "",
-      grade: "",
-      email: "",
-      phone: "",
-      role: "Member",
-    })
+      // Reset form
+      setFormData({
+        name: "",
+        grade: "",
+        email: "",
+        phone: "",
+        role: "Member",
+      })
 
-    setIsDialogOpen(false)
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding member:", error)
+      alert("Failed to add member. Please try again.")
+    }
   }
 
-  const handleDeleteMember = (memberId: number) => {
+  const handleDeleteMember = async (memberId: number) => {
     if (confirm("Are you sure you want to remove this member?")) {
-      deleteMember(memberId)
+      try {
+        await deleteMember(memberId)
+      } catch (error) {
+        console.error("Error deleting member:", error)
+        alert("Failed to delete member. Please try again.")
+      }
     }
   }
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesRole = filterRole === "All" || member.role === filterRole
     const matchesGrade = filterGrade === "All" || member.grade === filterGrade
     return matchesSearch && matchesRole && matchesGrade
@@ -110,11 +125,34 @@ export default function MembersPage() {
 
   const activeMembers = members.filter((member) => member.status === "active").length
   const averageAttendance =
-    members.length > 0 ? Math.round(members.reduce((sum, member) => sum + member.attendance, 0) / members.length) : 0
-  const newThisMonth = members.filter((member) =>
-    member.joinDate.includes(new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })),
-  ).length
+    members.length > 0
+      ? Math.round(members.reduce((sum, member) => sum + (member.attendance_percentage || 0), 0) / members.length)
+      : 0
+
+  // Calculate new members this month
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  const newThisMonth = members.filter((member) => member.join_date && member.join_date.startsWith(currentMonth)).length
+
   const officers = members.filter((m) => m.role !== "Member").length
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold">Members</h1>
+          </div>
+        </header>
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading members...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -318,10 +356,12 @@ export default function MembersPage() {
                       <h3 className="font-semibold text-lg">{member.name}</h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{member.grade}</span>
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-4 w-4" />
-                          {member.email}
-                        </span>
+                        {member.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-4 w-4" />
+                            {member.email}
+                          </span>
+                        )}
                         {member.phone && (
                           <span className="flex items-center gap-1">
                             <Phone className="h-4 w-4" />
@@ -331,15 +371,17 @@ export default function MembersPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        Joined {member.joinDate}
+                        Joined {new Date(member.join_date).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right space-y-2">
                       {getRoleBadge(member.role)}
-                      {getAttendanceBadge(member.attendance)}
-                      <div className="text-sm text-muted-foreground">{member.attendance}% attendance</div>
+                      {getAttendanceBadge(member.attendance_percentage || 0)}
+                      <div className="text-sm text-muted-foreground">
+                        {member.attendance_percentage || 0}% attendance
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm">

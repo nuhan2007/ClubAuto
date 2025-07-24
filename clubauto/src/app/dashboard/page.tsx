@@ -7,8 +7,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { CalendarDays, Users, FileText, TrendingUp, AlertCircle } from "lucide-react"
 import { useData } from "@/lib/data-context"
 import { QuickAddMember } from "@/components/quick-add-member"
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
+  
   const { members, meetingNotes, events, hourEntries, attendanceRecords, tasks } = useData()
 
   // Calculate real stats
@@ -33,6 +35,16 @@ export default function Dashboard() {
 
   // Get upcoming events (next 3)
   const nextEvents = upcomingEvents.slice(0, 3)
+
+  const router = useRouter();
+
+  const handleViewMeetings = () => {
+    router.push("/meeting-notes")
+  }
+
+  const handleViewCalendar = () => {
+    router.push("/events");
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30">
@@ -129,6 +141,7 @@ export default function Dashboard() {
                 <div className="text-center py-4 text-muted-foreground">No meetings recorded yet</div>
               )}
               <Button
+                onClick={handleViewMeetings}
                 variant="outline"
                 className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 bg-transparent"
               >
@@ -169,6 +182,7 @@ export default function Dashboard() {
                 <div className="text-center py-4 text-muted-foreground">No upcoming events scheduled</div>
               )}
               <Button
+                onClick={handleViewCalendar}
                 variant="outline"
                 className="w-full border-orange-200 text-orange-700 hover:bg-orange-50 bg-transparent"
               >

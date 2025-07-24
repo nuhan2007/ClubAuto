@@ -18,83 +18,16 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Plus, Search, MapPin, Clock, Users, Star, AlertCircle } from "lucide-react"
+import { useData } from "@/lib/data-context"
 
 const eventCategories = ["All", "Performance", "Meeting", "Workshop", "Service", "Social", "Fundraiser"]
 
 export default function EventsPage() {
-  // Replace the existing events array with state
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Winter Performance",
-      date: "January 20, 2025",
-      time: "7:00 PM",
-      location: "School Auditorium",
-      category: "Performance",
-      description: "Annual winter theater performance featuring scenes from classic plays.",
-      attendees: 45,
-      maxAttendees: 50,
-      status: "upcoming",
-      priority: "high",
-      organizer: "Ms. Sarah Johnson",
-    },
-    {
-      id: 2,
-      title: "Fundraiser Meeting",
-      date: "December 22, 2024",
-      time: "3:30 PM",
-      location: "Room 204",
-      category: "Meeting",
-      description: "Planning session for upcoming bake sale and car wash fundraisers.",
-      attendees: 12,
-      maxAttendees: 20,
-      status: "upcoming",
-      priority: "medium",
-      organizer: "Alice Johnson",
-    },
-    {
-      id: 3,
-      title: "Script Reading Workshop",
-      date: "January 5, 2025",
-      time: "4:00 PM",
-      location: "Drama Room",
-      category: "Workshop",
-      description: "Workshop on script analysis and character development techniques.",
-      attendees: 18,
-      maxAttendees: 25,
-      status: "upcoming",
-      priority: "medium",
-      organizer: "Bob Smith",
-    },
-    {
-      id: 4,
-      title: "Community Service Day",
-      date: "December 28, 2024",
-      time: "9:00 AM",
-      location: "Local Theater",
-      category: "Service",
-      description: "Volunteer work at the community theater - set building and maintenance.",
-      attendees: 8,
-      maxAttendees: 15,
-      status: "upcoming",
-      priority: "low",
-      organizer: "Carol Davis",
-    },
-    {
-      id: 5,
-      title: "Fall Play Wrap Party",
-      date: "December 18, 2024",
-      time: "6:00 PM",
-      location: "School Cafeteria",
-      category: "Social",
-      description: "Celebration party for the successful completion of our fall production.",
-      attendees: 24,
-      maxAttendees: 30,
-      status: "completed",
-      priority: "low",
-      organizer: "Emma Brown",
-    },
-  ])
+  const { events, addEvent, updateEvent, deleteEvent, members, loading } = useData()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [filterCategory, setFilterCategory] = useState("All")
+  const [filterStatus, setFilterStatus] = useState("All")
 
   // Add form state
   const [formData, setFormData] = useState({
@@ -126,105 +59,111 @@ export default function EventsPage() {
     organizer: "",
   })
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [filterCategory, setFilterCategory] = useState("All")
-  const [filterStatus, setFilterStatus] = useState("All")
-
   // Add form handlers
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.date || !formData.location || !formData.organizer) {
       alert("Please fill in all required fields")
       return
     }
 
-    const newEvent = {
-      id: Date.now(),
-      title: formData.title,
-      date: formData.date,
-      time: formData.time,
-      location: formData.location,
-      category: formData.category,
-      description: formData.description,
-      attendees: 0,
-      maxAttendees: Number.parseInt(formData.maxAttendees) || 50,
-      status: "upcoming",
-      priority: formData.priority,
-      organizer: formData.organizer,
+    try {
+      await addEvent({
+        title: formData.title,
+        event_date: formData.date,
+        event_time: formData.time,
+        location: formData.location,
+        category: formData.category,
+        description: formData.description,
+        current_attendees: 0,
+        max_attendees: Number.parseInt(formData.maxAttendees) || 50,
+        status: "upcoming",
+        priority: formData.priority,
+        organizer: formData.organizer,
+      })
+
+      // Reset form
+      setFormData({
+        title: "",
+        category: "",
+        date: "",
+        time: "",
+        priority: "",
+        location: "",
+        maxAttendees: "",
+        description: "",
+        organizer: "",
+      })
+
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding event:", error)
+      alert("Failed to create event. Please try again.")
     }
-
-    // Add to the beginning of the array
-    setEvents((prev) => [newEvent, ...prev])
-
-    // Reset form
-    setFormData({
-      title: "",
-      category: "",
-      date: "",
-      time: "",
-      priority: "",
-      location: "",
-      maxAttendees: "",
-      description: "",
-      organizer: "",
-    })
-
-    setIsDialogOpen(false)
   }
 
   const handleEdit = (event: any) => {
     setEditingEvent(event)
     setEditFormData({
       title: event.title,
-      category: event.category,
-      date: event.date,
-      time: event.time,
+      category: event.category || "",
+      date: event.event_date,
+      time: event.event_time || "",
       priority: event.priority,
-      location: event.location,
-      maxAttendees: event.maxAttendees.toString(),
-      description: event.description,
-      organizer: event.organizer,
+      location: event.location || "",
+      maxAttendees: event.max_attendees?.toString() || "",
+      description: event.description || "",
+      organizer: event.organizer || "",
     })
     setIsEditDialogOpen(true)
   }
 
-  const handleEditSubmit = () => {
+  const handleEditSubmit = async () => {
     if (!editFormData.title || !editFormData.date || !editFormData.location || !editFormData.organizer) {
       alert("Please fill in all required fields")
       return
     }
 
-    updateEvent(editingEvent.id, {
-      title: editFormData.title,
-      date: editFormData.date,
-      time: editFormData.time,
-      location: editFormData.location,
-      category: editFormData.category,
-      description: editFormData.description,
-      maxAttendees: Number.parseInt(editFormData.maxAttendees) || 50,
-      priority: editFormData.priority,
-      organizer: editFormData.organizer,
-    })
+    try {
+      await updateEvent(editingEvent.id, {
+        title: editFormData.title,
+        event_date: editFormData.date,
+        event_time: editFormData.time,
+        location: editFormData.location,
+        category: editFormData.category,
+        description: editFormData.description,
+        max_attendees: Number.parseInt(editFormData.maxAttendees) || 50,
+        priority: editFormData.priority,
+        organizer: editFormData.organizer,
+      })
 
-    setIsEditDialogOpen(false)
-    setEditingEvent(null)
+      setIsEditDialogOpen(false)
+      setEditingEvent(null)
+    } catch (error) {
+      console.error("Error updating event:", error)
+      alert("Failed to update event. Please try again.")
+    }
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this event?")) {
-      deleteEvent(id)
+      try {
+        await deleteEvent(id)
+      } catch (error) {
+        console.error("Error deleting event:", error)
+        alert("Failed to delete event. Please try again.")
+      }
     }
   }
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (event.location && event.location.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = filterCategory === "All" || event.category === filterCategory
     const matchesStatus = filterStatus === "All" || event.status === filterStatus
     return matchesSearch && matchesCategory && matchesStatus
@@ -257,15 +196,29 @@ export default function EventsPage() {
   }
 
   const upcomingEvents = events.filter((event) => event.status === "upcoming").length
-  const totalAttendees = events.reduce((sum, event) => sum + event.attendees, 0)
-  const thisMonthEvents = events.filter((event) => event.date.includes("December 2024")).length
+  const totalAttendees = events.reduce((sum, event) => sum + (event.current_attendees || 0), 0)
 
-  const updateEvent = (id: number, updatedEvent: any) => {
-    setEvents((prevEvents) => prevEvents.map((event) => (event.id === id ? { ...event, ...updatedEvent } : event)))
-  }
+  // Calculate this month events
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  const thisMonthEvents = events.filter((event) => event.event_date.startsWith(currentMonth)).length
 
-  const deleteEvent = (id: number) => {
-    setEvents((prevEvents) => prevEvents.filter((event) => event.id !== id))
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold">Events</h1>
+          </div>
+        </header>
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading events...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -306,12 +259,12 @@ export default function EventsPage() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="performance">Performance</SelectItem>
-                        <SelectItem value="meeting">Meeting</SelectItem>
-                        <SelectItem value="workshop">Workshop</SelectItem>
-                        <SelectItem value="service">Community Service</SelectItem>
-                        <SelectItem value="social">Social</SelectItem>
-                        <SelectItem value="fundraiser">Fundraiser</SelectItem>
+                        <SelectItem value="Performance">Performance</SelectItem>
+                        <SelectItem value="Meeting">Meeting</SelectItem>
+                        <SelectItem value="Workshop">Workshop</SelectItem>
+                        <SelectItem value="Service">Community Service</SelectItem>
+                        <SelectItem value="Social">Social</SelectItem>
+                        <SelectItem value="Fundraiser">Fundraiser</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -387,11 +340,11 @@ export default function EventsPage() {
                       <SelectValue placeholder="Select organizer" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Ms. Sarah Johnson">Ms. Sarah Johnson (Advisor)</SelectItem>
-                      <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
-                      <SelectItem value="Bob Smith">Bob Smith</SelectItem>
-                      <SelectItem value="Carol Davis">Carol Davis</SelectItem>
-                      <SelectItem value="Emma Brown">Emma Brown</SelectItem>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.name}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -431,12 +384,12 @@ export default function EventsPage() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="performance">Performance</SelectItem>
-                        <SelectItem value="meeting">Meeting</SelectItem>
-                        <SelectItem value="workshop">Workshop</SelectItem>
-                        <SelectItem value="service">Community Service</SelectItem>
-                        <SelectItem value="social">Social</SelectItem>
-                        <SelectItem value="fundraiser">Fundraiser</SelectItem>
+                        <SelectItem value="Performance">Performance</SelectItem>
+                        <SelectItem value="Meeting">Meeting</SelectItem>
+                        <SelectItem value="Workshop">Workshop</SelectItem>
+                        <SelectItem value="Service">Community Service</SelectItem>
+                        <SelectItem value="Social">Social</SelectItem>
+                        <SelectItem value="Fundraiser">Fundraiser</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -518,11 +471,11 @@ export default function EventsPage() {
                       <SelectValue placeholder="Select organizer" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Ms. Sarah Johnson">Ms. Sarah Johnson (Advisor)</SelectItem>
-                      <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
-                      <SelectItem value="Bob Smith">Bob Smith</SelectItem>
-                      <SelectItem value="Carol Davis">Carol Davis</SelectItem>
-                      <SelectItem value="Emma Brown">Emma Brown</SelectItem>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.name}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -570,7 +523,7 @@ export default function EventsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{thisMonthEvents}</div>
-              <p className="text-xs text-muted-foreground">Events in December</p>
+              <p className="text-xs text-muted-foreground">Events this month</p>
             </CardContent>
           </Card>
 
@@ -580,8 +533,17 @@ export default function EventsPage() {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Dec 22</div>
-              <p className="text-xs text-muted-foreground">Fundraiser Meeting</p>
+              <div className="text-2xl font-bold">
+                {upcomingEvents > 0
+                  ? new Date(events.find((e) => e.status === "upcoming")?.event_date || "").toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "numeric" },
+                    )
+                  : "None"}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {upcomingEvents > 0 ? events.find((e) => e.status === "upcoming")?.title : "No upcoming events"}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -637,42 +599,50 @@ export default function EventsPage() {
                     <CardDescription className="flex items-center gap-4 mt-2">
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {event.date} at {event.time}
+                        {new Date(event.event_date).toLocaleDateString()} {event.event_time && `at ${event.event_time}`}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {event.location}
-                      </span>
+                      {event.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {event.location}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {event.attendees}/{event.maxAttendees}
+                        {event.current_attendees || 0}/{event.max_attendees || 0}
                       </span>
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{event.category}</Badge>
+                    {event.category && <Badge variant="outline">{event.category}</Badge>}
                     {getStatusBadge(event.status)}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{event.description}</p>
+                  {event.description && <p className="text-sm text-muted-foreground">{event.description}</p>}
                   <div className="flex items-center justify-between">
                     <div className="text-sm">
-                      <span className="font-medium">Organizer:</span> {event.organizer}
+                      {event.organizer && (
+                        <>
+                          <span className="font-medium">Organizer:</span> {event.organizer}
+                        </>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{ width: `${(event.attendees / event.maxAttendees) * 100}%` }}
-                        ></div>
+                    {event.max_attendees && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full"
+                            style={{ width: `${((event.current_attendees || 0) / event.max_attendees) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {Math.round(((event.current_attendees || 0) / event.max_attendees) * 100)}% full
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {Math.round((event.attendees / event.maxAttendees) * 100)}% full
-                      </span>
-                    </div>
+                    )}
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="sm">

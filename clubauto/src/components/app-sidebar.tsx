@@ -66,7 +66,6 @@ export function AppSidebar() {
           </div>
           <div>
             <h2 className="text-lg font-semibold">ClubAuto</h2>
-            <p className="text-sm text-muted-foreground">Example Club</p>
           </div>
         </div>
       </SidebarHeader>

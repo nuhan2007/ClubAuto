@@ -32,7 +32,7 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-orange-600 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-orange-500 bg-clip-text text-transparent">
                 ClubAuto
               </h1>
             </div>
@@ -233,8 +233,8 @@ export default function HomePage() {
             </div>
             <h3 className="text-2xl font-bold">ClubAuto</h3>
           </div>
-          <p className="text-gray-400 mb-4">Empowering student organizations to thrive and grow.</p>
-          <p className="text-gray-500 text-sm">© 2024 ClubAuto. Built for students, by students.</p>
+          <p className="text-gray-400 mb-4">Empowering student organizations and clubs to thrive and grow.</p>
+          <p className="text-gray-500 text-sm">© 2025 ClubAuto. Built for students, by students.</p>
         </div>
       </footer>
     </div>

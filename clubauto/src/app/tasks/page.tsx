@@ -18,7 +18,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ClipboardList, Plus, Search, Calendar, User, AlertTriangle, CheckCircle, Clock, LogOut } from "lucide-react"
+import { ClipboardList, Plus, Search, Calendar, User, AlertTriangle, CheckCircle, Clock, Edit } from "lucide-react"
 import { useData } from "@/lib/data-context"
 
 const taskCategories = ["All", "Production", "Fundraising", "Marketing", "Service", "Administrative"]
@@ -26,9 +26,11 @@ const taskStatuses = ["All", "pending", "in-progress", "completed", "overdue"]
 const priorities = ["All", "high", "medium", "low"]
 
 export default function TasksPage() {
-  const { tasks, addTask, members } = useData()
+  const { tasks, addTask, updateTask, members, loading } = useData()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<any>(null)
   const [filterCategory, setFilterCategory] = useState("All")
   const [filterStatus, setFilterStatus] = useState("All")
   const [filterPriority, setFilterPriority] = useState("All")
@@ -43,8 +45,24 @@ export default function TasksPage() {
     subtasks: ["", "", ""],
   })
 
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    description: "",
+    assignee: "",
+    dueDate: "",
+    priority: "",
+    category: "",
+    status: "",
+    progress: "",
+    subtasks: ["", "", ""],
+  })
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleEditInputChange = (field: string, value: string) => {
+    setEditFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSubtaskChange = (index: number, value: string) => {
@@ -53,7 +71,13 @@ export default function TasksPage() {
     setFormData((prev) => ({ ...prev, subtasks: newSubtasks }))
   }
 
-  const handleSubmit = () => {
+  const handleEditSubtaskChange = (index: number, value: string) => {
+    const newSubtasks = [...editFormData.subtasks]
+    newSubtasks[index] = value
+    setEditFormData((prev) => ({ ...prev, subtasks: newSubtasks }))
+  }
+
+  const handleSubmit = async () => {
     if (!formData.title || !formData.assignee || !formData.dueDate || !formData.priority || !formData.category) {
       alert("Please fill in all required fields")
       return
@@ -67,42 +91,100 @@ export default function TasksPage() {
         completed: false,
       }))
 
-    addTask({
-      title: formData.title,
-      description: formData.description,
-      assignee: formData.assignee,
-      dueDate: formData.dueDate,
-      priority: formData.priority,
-      status: "pending",
-      category: formData.category,
-      progress: 0,
-      subtasks,
-    })
+    try {
+      await addTask({
+        title: formData.title,
+        description: formData.description,
+        assignee: formData.assignee,
+        due_date: formData.dueDate,
+        priority: formData.priority,
+        status: "pending",
+        category: formData.category,
+        progress: 0,
+        subtasks,
+      })
 
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      assignee: "",
-      dueDate: "",
-      priority: "",
-      category: "",
-      subtasks: ["", "", ""],
-    })
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        assignee: "",
+        dueDate: "",
+        priority: "",
+        category: "",
+        subtasks: ["", "", ""],
+      })
 
-    setIsDialogOpen(false)
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding task:", error)
+      alert("Failed to create task. Please try again.")
+    }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("clubManagerAuth")
-    window.location.reload()
+  const handleEdit = (task: any) => {
+    setEditingTask(task)
+    setEditFormData({
+      title: task.title,
+      description: task.description || "",
+      assignee: task.assignee || "",
+      dueDate: task.due_date || "",
+      priority: task.priority,
+      category: task.category || "",
+      status: task.status,
+      progress: task.progress?.toString() || "0",
+      subtasks:
+        task.subtasks?.length > 0 ? [...task.subtasks.map((st: any) => st.title), "", ""].slice(0, 3) : ["", "", ""],
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSubmit = async () => {
+    if (
+      !editFormData.title ||
+      !editFormData.assignee ||
+      !editFormData.dueDate ||
+      !editFormData.priority ||
+      !editFormData.category
+    ) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    const subtasks = editFormData.subtasks
+      .filter((task) => task.trim())
+      .map((task, index) => ({
+        id: index + 1,
+        title: task.trim(),
+        completed: false,
+      }))
+
+    try {
+      await updateTask(editingTask.id, {
+        title: editFormData.title,
+        description: editFormData.description,
+        assignee: editFormData.assignee,
+        due_date: editFormData.dueDate,
+        priority: editFormData.priority,
+        status: editFormData.status,
+        category: editFormData.category,
+        progress: Number.parseInt(editFormData.progress) || 0,
+        subtasks,
+      })
+
+      setIsEditDialogOpen(false)
+      setEditingTask(null)
+    } catch (error) {
+      console.error("Error updating task:", error)
+      alert("Failed to update task. Please try again.")
+    }
   }
 
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.assignee.toLowerCase().includes(searchTerm.toLowerCase())
+      (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (task.assignee && task.assignee.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = filterCategory === "All" || task.category === filterCategory
     const matchesStatus = filterStatus === "All" || task.status === filterStatus
     const matchesPriority = filterPriority === "All" || task.priority === filterPriority
@@ -154,6 +236,25 @@ export default function TasksPage() {
   const completedTasks = tasks.filter((task) => task.status === "completed").length
   const inProgressTasks = tasks.filter((task) => task.status === "in-progress").length
   const overdueTasks = tasks.filter((task) => task.status === "overdue").length
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold">Tasks</h1>
+          </div>
+        </header>
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading tasks...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -273,10 +374,150 @@ export default function TasksPage() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+
+          {/* Edit Task Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Task</DialogTitle>
+                <DialogDescription>Update task details and progress.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-task-title">Task Title</Label>
+                  <Input
+                    id="edit-task-title"
+                    placeholder="Enter task title"
+                    value={editFormData.title}
+                    onChange={(e) => handleEditInputChange("title", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-task-description">Description</Label>
+                  <Textarea
+                    id="edit-task-description"
+                    placeholder="Describe the task in detail..."
+                    className="min-h-[100px]"
+                    value={editFormData.description}
+                    onChange={(e) => handleEditInputChange("description", e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-task-assignee">Assign To</Label>
+                    <Select
+                      value={editFormData.assignee}
+                      onValueChange={(value) => handleEditInputChange("assignee", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {members.map((member) => (
+                          <SelectItem key={member.id} value={member.name}>
+                            {member.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-task-category">Category</Label>
+                    <Select
+                      value={editFormData.category}
+                      onValueChange={(value) => handleEditInputChange("category", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Production">Production</SelectItem>
+                        <SelectItem value="Fundraising">Fundraising</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Service">Community Service</SelectItem>
+                        <SelectItem value="Administrative">Administrative</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-task-due-date">Due Date</Label>
+                    <Input
+                      id="edit-task-due-date"
+                      type="date"
+                      value={editFormData.dueDate}
+                      onChange={(e) => handleEditInputChange("dueDate", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-task-priority">Priority</Label>
+                    <Select
+                      value={editFormData.priority}
+                      onValueChange={(value) => handleEditInputChange("priority", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-task-status">Status</Label>
+                    <Select
+                      value={editFormData.status}
+                      onValueChange={(value) => handleEditInputChange("status", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-task-progress">Progress (%)</Label>
+                  <Input
+                    id="edit-task-progress"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="0"
+                    value={editFormData.progress}
+                    onChange={(e) => handleEditInputChange("progress", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Subtasks (Optional)</Label>
+                  <div className="space-y-2">
+                    {editFormData.subtasks.map((subtask, index) => (
+                      <Input
+                        key={index}
+                        placeholder={`Subtask ${index + 1}`}
+                        value={subtask}
+                        onChange={(e) => handleEditSubtaskChange(index, e.target.value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleEditSubmit}>Update Task</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -392,18 +633,22 @@ export default function TasksPage() {
                       {getPriorityIcon(task.priority)}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-4 mt-2">
-                      <span className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        {task.assignee}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Due: {task.dueDate}
-                      </span>
+                      {task.assignee && (
+                        <span className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          {task.assignee}
+                        </span>
+                      )}
+                      {task.due_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Due: {new Date(task.due_date).toLocaleDateString()}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{task.category}</Badge>
+                    {task.category && <Badge variant="outline">{task.category}</Badge>}
                     {getPriorityBadge(task.priority)}
                     {getStatusBadge(task.status)}
                   </div>
@@ -411,18 +656,18 @@ export default function TasksPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{task.description}</p>
+                  {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
 
                   {/* Progress Bar */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Progress</span>
-                      <span>{task.progress}%</span>
+                      <span>{task.progress || 0}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${task.progress}%` }}
+                        style={{ width: `${task.progress || 0}%` }}
                       ></div>
                     </div>
                   </div>
@@ -432,7 +677,7 @@ export default function TasksPage() {
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Subtasks</h4>
                       <div className="space-y-2">
-                        {task.subtasks.map((subtask) => (
+                        {task.subtasks.map((subtask: any) => (
                           <div key={subtask.id} className="flex items-center space-x-2">
                             <Checkbox checked={subtask.completed} />
                             <span
@@ -447,11 +692,12 @@ export default function TasksPage() {
                   )}
 
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      View Details
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(task)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
                     </Button>
                     <Button variant="outline" size="sm">
-                      Edit
+                      View Details
                     </Button>
                     {task.status !== "completed" && <Button size="sm">Update Progress</Button>}
                   </div>
@@ -476,34 +722,6 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common task management operations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Bulk Complete
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <User className="h-5 w-5" />
-                Assign Tasks
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <Calendar className="h-5 w-5" />
-                Set Deadlines
-              </Button>
-              <Button variant="outline" className="h-16 flex-col gap-2">
-                <ClipboardList className="h-5 w-5" />
-                Export Report
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

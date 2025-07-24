@@ -10,7 +10,7 @@ import ClientLayout from "./clientLayout"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Club Manager - Manage Your High School Club",
+  title: "ClubAuto - Manage Your High School Club",
   description:
     "A comprehensive platform for managing high school clubs, tracking attendance, organizing events, and more.",
 }

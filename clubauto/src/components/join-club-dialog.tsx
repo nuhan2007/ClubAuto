@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { UserPlus, Search } from "lucide-react"
-import { useData, type Club } from "@/lib/data-context"
+import { UserPlus, Key } from "lucide-react"
+import { useData } from "@/lib/data-context"
 
 interface JoinClubDialogProps {
   onClubJoined: () => void
@@ -24,38 +23,32 @@ interface JoinClubDialogProps {
 export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<Club[]>([])
-  const [searching, setSearching] = useState(false)
+  const [clubCode, setClubCode] = useState("")
+  const [message, setMessage] = useState("")
 
-  const { searchClubs, joinClub } = useData()
+  const { joinClubWithCode } = useData()
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
-
-    setSearching(true)
-    try {
-      const results = await searchClubs(searchQuery)
-      setSearchResults(results)
-    } catch (error) {
-      console.error("Error searching clubs:", error)
-      alert("Failed to search clubs. Please try again.")
-    } finally {
-      setSearching(false)
+  const handleJoinClub = async () => {
+    if (!clubCode.trim()) {
+      setMessage("Please enter a club code")
+      return
     }
-  }
 
-  const handleJoinClub = async (clubId: string) => {
     setLoading(true)
+    setMessage("")
+
     try {
-      await joinClub(clubId)
-      setOpen(false)
-      setSearchQuery("")
-      setSearchResults([])
-      onClubJoined()
-    } catch (error) {
+      await joinClubWithCode(clubCode.trim().toUpperCase())
+      setMessage("Join request sent! Wait for approval from club officers.")
+      setClubCode("")
+      setTimeout(() => {
+        setOpen(false)
+        setMessage("")
+        onClubJoined()
+      }, 2000)
+    } catch (error: any) {
       console.error("Error joining club:", error)
-      alert("Failed to join club. You may already be a member.")
+      setMessage(error.message || "Failed to join club. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -69,75 +62,52 @@ export function JoinClubDialog({ onClubJoined }: JoinClubDialogProps) {
           Join Club
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Join Existing Club</DialogTitle>
-          <DialogDescription>Search for clubs by name or school to join as an officer.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Join Club with Code
+          </DialogTitle>
+          <DialogDescription>
+            Enter the club code provided by an existing officer to request to join their club.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="search">Search Clubs</Label>
-            <div className="flex gap-2">
-              <Input
-                id="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by club name or school..."
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              />
-              <Button onClick={handleSearch} disabled={searching || !searchQuery.trim()}>
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="clubCode">Club Code</Label>
+            <Input
+              id="clubCode"
+              value={clubCode}
+              onChange={(e) => setClubCode(e.target.value.toUpperCase())}
+              placeholder="Enter 8-character club code"
+              maxLength={8}
+              className="font-mono text-lg tracking-wider text-center"
+            />
+            <p className="text-xs text-muted-foreground">Ask an existing club officer for the club code</p>
           </div>
 
-          {searchResults.length > 0 && (
-            <div className="grid gap-2 max-h-60 overflow-y-auto">
-              <Label>Search Results</Label>
-              {searchResults.map((club) => (
-                <Card key={club.id} className="cursor-pointer hover:bg-accent">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-sm">{club.name}</CardTitle>
-                        <CardDescription className="text-xs">{club.school}</CardDescription>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleJoinClub(club.id)}
-                        disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        {loading ? "Joining..." : "Join"}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  {club.description && (
-                    <CardContent className="pt-0">
-                      <p className="text-xs text-muted-foreground">{club.description}</p>
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {searching && (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-sm text-muted-foreground mt-2">Searching clubs...</p>
-            </div>
-          )}
-
-          {searchQuery && !searching && searchResults.length === 0 && (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">No clubs found. Try a different search term.</p>
+          {message && (
+            <div
+              className={`text-sm p-3 rounded-md ${
+                message.includes("sent") || message.includes("approval")
+                  ? "text-green-700 bg-green-50 border border-green-200"
+                  : "text-red-700 bg-red-50 border border-red-200"
+              }`}
+            >
+              {message}
             </div>
           )}
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
+          </Button>
+          <Button
+            onClick={handleJoinClub}
+            disabled={loading || !clubCode.trim()}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {loading ? "Sending Request..." : "Request to Join"}
           </Button>
         </DialogFooter>
       </DialogContent>
