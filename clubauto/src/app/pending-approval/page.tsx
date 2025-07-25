@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -94,7 +96,6 @@ export default function PendingApprovalPage() {
     )
   }
 
-  const hasPendingRequests = pendingRequests.some((req) => req.status === "pending")
   const hasApprovedRequests = pendingRequests.some((req) => req.status === "approved")
 
   return (

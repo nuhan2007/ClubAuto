@@ -5,9 +5,7 @@ import type React from "react"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
+import { SidebarInset } from "@/components/ui/sidebar"
 import { useAuth } from "@/lib/auth-context"
 import { useData } from "@/lib/data-context"
 
@@ -37,28 +35,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, [user, currentClub, setCurrentClub])
 
   // Get page title based on pathname
-  const getPageTitle = () => {
-    switch (pathname) {
-      case "/dashboard":
-        return "Dashboard"
-      case "/members":
-        return "Members"
-      case "/meeting-notes":
-        return "Meeting Notes"
-      case "/attendance":
-        return "Attendance"
-      case "/hours":
-        return "Hours"
-      case "/events":
-        return "Events"
-      case "/tasks":
-        return "Tasks"
-      case "/settings":
-        return "Settings"
-      default:
-        return "Club Manager"
-    }
-  }
 
   if (showSidebar) {
     return (

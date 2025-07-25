@@ -51,8 +51,8 @@ export function QuickAddMember({ trigger, onSuccess }: QuickAddMemberProps) {
       email: formData.email,
       phone: formData.phone,
       role: formData.role,
-      joinDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      attendance: 0,
+      join_date: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      attendance_percentage: 0,
       status: "active",
     })
 

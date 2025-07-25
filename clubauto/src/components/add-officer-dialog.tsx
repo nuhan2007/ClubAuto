@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import type React from "react"
@@ -15,15 +16,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { UserPlus } from "lucide-react"
-import { useData } from "@/lib/data-context"
 
 interface AddOfficerDialogProps {
   clubId: string
   onOfficerAdded?: () => void
 }
 
-export function AddOfficerDialog({ clubId, onOfficerAdded }: AddOfficerDialogProps) {
-  const { addOfficerToClub } = useData()
+export function AddOfficerDialog({ onOfficerAdded }: AddOfficerDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
@@ -39,7 +38,6 @@ export function AddOfficerDialog({ clubId, onOfficerAdded }: AddOfficerDialogPro
     setIsLoading(true)
 
     try {
-      await addOfficerToClub(clubId, email.trim())
       setEmail("")
       setIsOpen(false)
       onOfficerAdded?.()

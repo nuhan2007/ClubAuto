@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
   
-  const { members, meetingNotes, events, hourEntries, attendanceRecords, tasks } = useData()
+  const { members, meetingNotes, events, tasks } = useData()
 
   // Calculate real stats
   const totalMembers = members.length
@@ -168,7 +168,7 @@ export default function Dashboard() {
                   >
                     <div>
                       <h4 className="font-medium text-orange-900">{event.title}</h4>
-                      <p className="text-sm text-orange-600">{event.date}</p>
+                      <p className="text-sm text-orange-600">{event.event_date}</p>
                     </div>
                     <Badge
                       variant={event.priority === "high" ? "destructive" : "outline"}

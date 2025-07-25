@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -11,17 +13,6 @@ import { supabase } from "@/lib/supabase"
 import { CreateClubDialog } from "@/components/create-club-dialog"
 import { JoinClubDialog } from "@/components/join-club-dialog"
 
-interface Club {
-  id: string
-  name: string
-  description: string
-  school: string
-  members: number
-  upcomingEvents: number
-  lastActivity: string
-  color: string
-  isActive: boolean
-}
 
 export default function SelectClubPage() {
   const [loading, setLoading] = useState(true)

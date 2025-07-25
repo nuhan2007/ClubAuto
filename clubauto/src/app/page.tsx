@@ -13,14 +13,6 @@ export default function HomePage() {
     router.push("/login")
   }
 
-  const handleGoToDashboard = () => {
-    const selectedClub = localStorage.getItem("selectedClub")
-    if (selectedClub) {
-      router.push("/dashboard")
-    } else {
-      router.push("/select-club")
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30">
