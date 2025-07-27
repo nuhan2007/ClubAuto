@@ -772,13 +772,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
           throw error
         }
 
-        if (currentClub) await loadClubData(currentClub.id)
       } catch (error) {
         console.error("Error in updateMember:", error)
         throw error
       }
     },
-    [currentClub, loadClubData],
+    [],
   )
 
   const deleteMember = useCallback(

@@ -59,13 +59,13 @@ export default function HomePage() {
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               size="lg"
               className="text-lg px-8 py-4 border-2 border-gray-300 bg-transparent"
             >
               Learn More
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
@@ -226,7 +226,7 @@ export default function HomePage() {
             <h3 className="text-2xl font-bold">ClubAuto</h3>
           </div>
           <p className="text-gray-400 mb-4">Empowering student organizations and clubs to thrive and grow.</p>
-          <p className="text-gray-500 text-sm">© 2025 ClubAuto. Built for students, by students.</p>
+          <p className="text-gray-500 text-sm">ClubAuto. Built for students, by students.</p>
         </div>
       </footer>
     </div>
