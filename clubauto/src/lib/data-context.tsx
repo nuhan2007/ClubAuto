@@ -264,10 +264,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const loadClubData = useCallback(async (clubId: string) => {
     if (!clubId) return
 
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Data loading timeout')), 7000)
+    )
+
     setLoading(true)
     try {
       // Load all club data in parallel
-      const [membersResult, meetingNotesResult, attendanceResult, hoursResult, eventsResult, tasksResult] =
+      const dataPromise = 
         await Promise.all([
           supabase.from("members").select("*").eq("club_id", clubId).order("created_at", { ascending: false }),
           supabase.from("meeting_notes").select("*").eq("club_id", clubId).order("date", { ascending: false }),
@@ -280,6 +284,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           supabase.from("events").select("*").eq("club_id", clubId).order("event_date", { ascending: true }),
           supabase.from("tasks").select("*").eq("club_id", clubId).order("created_at", { ascending: false }),
         ])
+
+        const result = await Promise.race([dataPromise, timeoutPromise]) as any[]
+
+        const [membersResult, meetingNotesResult, attendanceResult, hoursResult, eventsResult, tasksResult] = result
 
       if (membersResult.error) console.error("Error loading members:", membersResult.error)
       if (meetingNotesResult.error) console.error("Error loading meeting notes:", meetingNotesResult.error)
@@ -294,11 +302,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setHourEntries(hoursResult.data || [])
       setEvents(eventsResult.data || [])
       setTasks(tasksResult.data || [])
-    } catch (error) {
+
+    } 
+    
+    catch (error) {
       console.error("Error loading club data:", error)
-    } finally {
+
+      setMembers([])
+      setMeetingNotes([])
+      setAttendanceRecords([])
+      setHourEntries([])
+      setEvents([])
+      setTasks([])
+    } 
+    
+    finally {
       setLoading(false)
     }
+
   }, [])
 
   // Load join requests for current club

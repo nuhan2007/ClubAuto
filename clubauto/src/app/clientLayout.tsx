@@ -20,6 +20,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   // Restore selected club from localStorage on page refresh
   useEffect(() => {
+
+    if(typeof window === "undefined") return
+    
     if (user && !currentClub) {
       const savedClub = localStorage.getItem("selectedClub")
       if (savedClub) {
