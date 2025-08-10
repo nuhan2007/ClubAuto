@@ -194,7 +194,7 @@ const generateRandomCode = () => {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [currentClub, setCurrentClub] = useState<Club | null>(null)
   const [userClubs, setUserClubs] = useState<Club[]>([])
   const [members, setMembers] = useState<Member[]>([])
@@ -1213,12 +1213,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Effects
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       loadUserClubs()
-    } else {
+    } else if (!authLoading && !user) {
       setUserClubs([])
     }
-  }, [user, loadUserClubs])
+  }, [user, authLoading, loadUserClubs])
 
   useEffect(() => {
     if (currentClub) {
