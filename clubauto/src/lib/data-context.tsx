@@ -1213,12 +1213,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Effects
   useEffect(() => {
-    if (!authLoading && user) {
+    if (user) {
       loadUserClubs()
-    } else if (!authLoading && !user) {
+    } else {
       setUserClubs([])
     }
-  }, [user, authLoading, loadUserClubs])
+  }, [user, loadUserClubs])
 
   useEffect(() => {
     if (currentClub) {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
@@ -20,13 +19,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error("Error getting session:", error)
+        }
+
+        if (mounted) {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error("Error in getInitialSession:", error)
+        if (mounted) {
+          setUser(null)
+          setLoading(false)
+        }
+      }
     }
 
     getInitialSession()
@@ -35,16 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
+      console.log("Auth state changed:", event, session?.user?.id)
 
-      // Create user profile if it doesn't exist
-      if (event === "SIGNED_IN" && session?.user) {
-        await ensureUserProfile(session.user)
+      if (mounted) {
+        setUser(session?.user ?? null)
+        setLoading(false)
+
+        // Create user profile if it doesn't exist
+        if (event === "SIGNED_IN" && session?.user) {
+          await ensureUserProfile(session.user)
+        }
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const ensureUserProfile = async (user: User) => {
@@ -73,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true)
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -80,11 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       return { error }
+    } finally {
+      // Don't set loading to false here, let the auth state change handle it
     }
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      setLoading(true)
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -97,13 +125,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       return { error }
+    } finally {
+      // Don't set loading to false here, let the auth state change handle it
     }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setLoading(false)
+    try {
+      setLoading(true)
+      await supabase.auth.signOut()
+      // Clear any cached data
+      localStorage.removeItem("selectedClub")
+    } catch (error) {
+      console.error("Error signing out:", error)
+    } finally {
+      // Don't set loading to false here, let the auth state change handle it
+    }
   }
 
   return (
