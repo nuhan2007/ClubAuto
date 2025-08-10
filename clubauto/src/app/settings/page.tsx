@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Settings, LogOut, Copy, RefreshCw, Users, Shield, Trash2, AlertTriangle } from "lucide-react"
 import { useData } from "@/lib/data-context"
+import { useAuth } from "@/lib/auth-context"
 
 export default function SettingsPage() {
   const {
@@ -29,6 +30,7 @@ export default function SettingsPage() {
     updateClubSettings,
     deleteAccount,
   } = useData()
+  const { signOut } = useAuth()
   const [message, setMessage] = useState("")
   const [isGeneratingCode, setIsGeneratingCode] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -159,9 +161,7 @@ export default function SettingsPage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("clubManagerAuth")
-    localStorage.removeItem("selectedClub")
-    window.location.href = "/"
+    signOut()
   }
 
   const pendingRequests = joinRequests.filter((req) => req.status === "pending")

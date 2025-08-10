@@ -45,7 +45,7 @@ export default function SelectClubPage() {
 
   const handleLogout = async () => {
     await signOut()
-    localStorage.removeItem("selectedClub")
+    
     router.push("/")
   }
 

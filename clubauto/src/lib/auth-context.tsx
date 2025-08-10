@@ -137,11 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       await supabase.auth.signOut()
       // Clear any cached data
+      localStorage.removeItem("clubManagerAuth")
       localStorage.removeItem("selectedClub")
     } catch (error) {
       console.error("Error signing out:", error)
     } finally {
-      // Don't set loading to false here, let the auth state change handle it
+      window.location.href = "/"
     }
   }
 
