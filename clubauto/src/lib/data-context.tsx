@@ -265,7 +265,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!clubId) return
 
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Data loading timeout')), 7000)
+      setTimeout(() => reject(new Error('Data loading timeout')), 5000)
     )
 
     setLoading(true)

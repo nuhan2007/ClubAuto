@@ -26,6 +26,7 @@ export default function Attendance() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<number[]>([])
   const [showAllRecords, setShowAllRecords] = useState(false)
+  const [selectedAll, setSelectedAll] = useState(false)
 
   const [formData, setFormData] = useState({
     eventName: "",
@@ -95,6 +96,12 @@ export default function Attendance() {
 
   const handleMemberToggle = (memberId: number) => {
     setSelectedMembers((prev) => (prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]))
+  }
+
+  const selectAllMembersToggle = () => {
+    const newSelectedAll = !selectedAll;
+    setSelectedAll(newSelectedAll);
+    setSelectedMembers(newSelectedAll ? members.map((member) => member.id) : []);
   }
 
   const getAttendanceBadge = (percentage: number) => {
@@ -176,7 +183,14 @@ export default function Attendance() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select Present Members</Label>
+                  <div className="space-y-2"><Label>Select Present Members</Label></div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Checkbox
+                      checked={selectedAll}
+                      onCheckedChange={selectAllMembersToggle}
+                    />
+                    <span className="text-sm">(Select All Members)</span>
+                  </div>
                   <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
                     <div className="space-y-3">
                       {members.map((member) => (

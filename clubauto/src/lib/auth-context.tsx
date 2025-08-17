@@ -21,15 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true
+    const mounted = true
 
-    // Get initial session
     const getInitialSession = async () => {
       try {
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession()
+        } = await supabase.auth.refreshSession()
 
         if (error) {
           console.error("Error getting session:", error)
@@ -51,51 +50,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getInitialSession()
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id)
+    // const {
+    //   data: { subscription },
+    // } = supabase.auth.onAuthStateChange(async (event, session) => {
+    //   console.log("Auth state changed:", event, session?.user?.id)
 
-      if (mounted) {
-        setUser(session?.user ?? null)
-        setLoading(false)
+    //   if (mounted) {
+    //     setUser(session?.user ?? null)
+    //     setLoading(false)
 
-        // Create user profile if it doesn't exist
-        if (event === "SIGNED_IN" && session?.user) {
-          await ensureUserProfile(session.user)
-        }
-      }
-    })
+    //     // Create user profile if it doesn't exist
+    //     if (event === "SIGNED_IN" && session?.user) {
+    //       await ensureUserProfile(session.user)
+    //     }
+    //   }
+    // })
 
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
+    // return () => {
+    //   mounted = false
+    //   subscription.unsubscribe()
+    // }
   }, [])
 
-  const ensureUserProfile = async (user: User) => {
-    try {
-      // Check if profile exists
-      const { data: existingProfile } = await supabase.from("user_profiles").select("id").eq("id", user.id).single()
+  // const ensureUserProfile = async (user: User) => {
+  //   try {
+  //     // Check if profile exists
+  //     const { data: existingProfile } = await supabase.from("user_profiles").select("id").eq("id", user.id).single()
 
-      // Create profile if it doesn't exist
-      if (!existingProfile) {
-        const { error } = await supabase.from("user_profiles").insert([
-          {
-            id: user.id,
-            email: user.email!,
-            full_name: user.user_metadata?.full_name || "",
-          },
-        ])
+  //     // Create profile if it doesn't exist
+  //     if (!existingProfile) {
+  //       const { error } = await supabase.from("user_profiles").insert([
+  //         {
+  //           id: user.id,
+  //           email: user.email!,
+  //           full_name: user.user_metadata?.full_name || "",
+  //         },
+  //       ])
 
-        if (error) {
-          console.error("Error creating user profile:", error)
-        }
-      }
-    } catch (error) {
-      console.error("Error ensuring user profile:", error)
-    }
-  }
+  //       if (error) {
+  //         console.error("Error creating user profile:", error)
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error ensuring user profile:", error)
+  //   }
+  // }
 
   const signIn = async (email: string, password: string) => {
     try {

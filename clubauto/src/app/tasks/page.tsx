@@ -22,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ClipboardList, Plus, Search, Calendar, User, AlertTriangle, CheckCircle, Clock, Edit } from "lucide-react"
 import { useData } from "@/lib/data-context"
 
-const taskCategories = ["All", "Production", "Fundraising", "Marketing", "Service", "Administrative"]
+const taskCategories = ["All", "Production", "Fundraising", "Volunteering"]
 const taskStatuses = ["All", "pending", "in-progress", "completed", "overdue"]
 const priorities = ["All", "high", "medium", "low"]
 
@@ -169,7 +169,7 @@ export default function TasksPage() {
         priority: editFormData.priority,
         status: editFormData.status,
         category: editFormData.category,
-        progress: Number.parseInt(editFormData.progress) || 0,
+        progress: Math.max(0, Math.min(100, Number.parseInt(editFormData.progress))) || 0,
         subtasks,
       })
 
@@ -700,7 +700,6 @@ export default function TasksPage() {
                     <Button variant="outline" size="sm">
                       View Details
                     </Button>
-                    {task.status !== "completed" && <Button size="sm">Update Progress</Button>}
                   </div>
                 </div>
               </CardContent>
