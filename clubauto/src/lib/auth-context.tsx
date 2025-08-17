@@ -21,14 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const mounted = true
+    let mounted = true
 
     const getInitialSession = async () => {
       try {
         const {
           data: { session },
           error,
-        } = await supabase.auth.refreshSession()
+        } = await supabase.auth.getSession()
 
         if (error) {
           console.error("Error getting session:", error)
@@ -48,6 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     getInitialSession()
+
+    return () => {
+      mounted = false;
+    }
 
     // Listen for auth changes
     // const {
