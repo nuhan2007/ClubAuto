@@ -43,6 +43,8 @@ export default function Attendance() {
       return
     }
 
+    setIsDialogOpen(false)
+
     try {
       await addAttendanceRecord({
         event_date: formData.eventDate,

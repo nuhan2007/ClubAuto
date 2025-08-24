@@ -191,7 +191,7 @@ export default function MembersPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select grade" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="9th">9th Grade</SelectItem>
                         <SelectItem value="10th">10th Grade</SelectItem>
                         <SelectItem value="11th">11th Grade</SelectItem>
@@ -228,7 +228,7 @@ export default function MembersPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" className="bg-white">
                       <SelectItem value="Member">Member</SelectItem>
                       <SelectItem value="Secretary">Secretary</SelectItem>
                       <SelectItem value="Treasurer">Treasurer</SelectItem>
@@ -316,7 +316,7 @@ export default function MembersPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               <SelectItem value="All">All Roles</SelectItem>
               <SelectItem value="President">President</SelectItem>
               <SelectItem value="Vice President">Vice President</SelectItem>
@@ -329,7 +329,7 @@ export default function MembersPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Filter by grade" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               <SelectItem value="All">All Grades</SelectItem>
               <SelectItem value="9th">9th Grade</SelectItem>
               <SelectItem value="10th">10th Grade</SelectItem>

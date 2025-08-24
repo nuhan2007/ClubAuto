@@ -23,7 +23,6 @@ import { ClipboardList, Plus, Search, Calendar, User, AlertTriangle, CheckCircle
 import { useData } from "@/lib/data-context"
 
 const taskCategories = ["All", "Production", "Fundraising", "Volunteering"]
-const taskStatuses = ["All", "pending", "in-progress", "completed", "overdue"]
 const priorities = ["All", "high", "medium", "low"]
 
 export default function TasksPage() {
@@ -192,20 +191,20 @@ export default function TasksPage() {
     return matchesSearch && matchesCategory && matchesStatus && matchesPriority
   })
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-500">Completed</Badge>
-      case "in-progress":
-        return <Badge className="bg-blue-500">In Progress</Badge>
-      case "pending":
-        return <Badge className="bg-yellow-500">Pending</Badge>
-      case "overdue":
-        return <Badge variant="destructive">Overdue</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
-    }
-  }
+  // const getStatusBadge = (status: string) => {
+  //   switch (status) {
+  //     case "completed":
+  //       return <Badge className="bg-green-500">Completed</Badge>
+  //     case "in-progress":
+  //       return <Badge className="bg-blue-500">In Progress</Badge>
+  //     case "pending":
+  //       return <Badge className="bg-yellow-500">Pending</Badge>
+  //     case "overdue":
+  //       return <Badge variant="destructive">Overdue</Badge>
+  //     default:
+  //       return <Badge variant="outline">{status}</Badge>
+  //   }
+  // }
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -304,9 +303,13 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select assignee" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" align="start" className="bg-white">
                         {members.map((member) => (
-                          <SelectItem key={member.id} value={member.name}>
+                          <SelectItem
+                            key={member.id}
+                            value={member.name}
+                            className="bg-white hover:bg-gray-100"
+                          >
                             {member.name}
                           </SelectItem>
                         ))}
@@ -319,12 +322,12 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="Production">Production</SelectItem>
                         <SelectItem value="Fundraising">Fundraising</SelectItem>
                         <SelectItem value="Marketing">Marketing</SelectItem>
-                        <SelectItem value="Service">Community Service</SelectItem>
-                        <SelectItem value="Administrative">Administrative</SelectItem>
+                        <SelectItem value="Volunteering">Volunteering</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -345,7 +348,7 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="low">Low</SelectItem>
@@ -413,9 +416,9 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select assignee" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         {members.map((member) => (
-                          <SelectItem key={member.id} value={member.name}>
+                          <SelectItem className="bg-white hover:bg-gray-100" key={member.id} value={member.name}>
                             {member.name}
                           </SelectItem>
                         ))}
@@ -431,12 +434,11 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="Production">Production</SelectItem>
                         <SelectItem value="Fundraising">Fundraising</SelectItem>
                         <SelectItem value="Marketing">Marketing</SelectItem>
                         <SelectItem value="Service">Community Service</SelectItem>
-                        <SelectItem value="Administrative">Administrative</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -460,27 +462,10 @@ export default function TasksPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="low">Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-task-status">Status</Label>
-                    <Select
-                      value={editFormData.status}
-                      onValueChange={(value) => handleEditInputChange("status", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -587,7 +572,7 @@ export default function TasksPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               {taskCategories.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -599,19 +584,12 @@ export default function TasksPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
-              {taskStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status === "All" ? "All Status" : status.charAt(0).toUpperCase() + status.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
           </Select>
           <Select value={filterPriority} onValueChange={setFilterPriority}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               {priorities.map((priority) => (
                 <SelectItem key={priority} value={priority}>
                   {priority === "All" ? "All Priority" : priority.charAt(0).toUpperCase() + priority.slice(1)}
@@ -651,7 +629,7 @@ export default function TasksPage() {
                   <div className="flex items-center gap-2">
                     {task.category && <Badge variant="outline">{task.category}</Badge>}
                     {getPriorityBadge(task.priority)}
-                    {getStatusBadge(task.status)}
+                    {/* {getStatusBadge(task.status)} */}
                   </div>
                 </div>
               </CardHeader>

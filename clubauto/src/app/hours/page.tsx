@@ -35,10 +35,9 @@ import { useData } from "@/lib/data-context"
 
 const hourCategories = [
   "All",
-  "Community Service",
+  "Volunteering",
   "Fundraising",
   "Event Planning",
-  "Administrative",
   "Training",
   "Other",
 ]
@@ -98,7 +97,7 @@ export default function HoursPage() {
         hours: hours,
         category: formData.category,
         description: formData.description,
-        status: "pending",
+        status: "approved",
       })
 
       // Reset form
@@ -283,7 +282,7 @@ export default function HoursPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select member" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         {members.map((member) => (
                           <SelectItem key={member.id} value={member.name}>
                             {member.name}
@@ -321,11 +320,10 @@ export default function HoursPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Community Service">Community Service</SelectItem>
+                      <SelectContent side="bottom" className="bg-white">
+                        <SelectItem value="Volunteering">Volunteering</SelectItem>
                         <SelectItem value="Fundraising">Fundraising</SelectItem>
                         <SelectItem value="Event Planning">Event Planning</SelectItem>
-                        <SelectItem value="Administrative">Administrative</SelectItem>
                         <SelectItem value="Training">Training</SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
@@ -370,7 +368,7 @@ export default function HoursPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select member" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         {members.map((member) => (
                           <SelectItem key={member.id} value={member.name}>
                             {member.name}
@@ -411,11 +409,10 @@ export default function HoursPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Community Service">Community Service</SelectItem>
+                      <SelectContent side="bottom" className="bg-white">
+                        <SelectItem value="Volunteering">Volunteering</SelectItem>
                         <SelectItem value="Fundraising">Fundraising</SelectItem>
                         <SelectItem value="Event Planning">Event Planning</SelectItem>
-                        <SelectItem value="Administrative">Administrative</SelectItem>
                         <SelectItem value="Training">Training</SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
@@ -430,9 +427,9 @@ export default function HoursPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="rejected">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
@@ -563,7 +560,7 @@ export default function HoursPage() {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" className="bg-white">
                   {hourCategories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -575,7 +572,7 @@ export default function HoursPage() {
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" className="bg-white">
                   {hourStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status === "All" ? "All Status" : status.charAt(0).toUpperCase() + status.slice(1)}

@@ -269,7 +269,7 @@ export default function EventsPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="Performance">Performance</SelectItem>
                         <SelectItem value="Meeting">Meeting</SelectItem>
                         <SelectItem value="Workshop">Workshop</SelectItem>
@@ -305,7 +305,7 @@ export default function EventsPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="low">Low</SelectItem>
@@ -350,7 +350,7 @@ export default function EventsPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Select organizer" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" className="bg-white">
                       {members.map((member) => (
                         <SelectItem key={member.id} value={member.name}>
                           {member.name}
@@ -394,7 +394,7 @@ export default function EventsPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="Performance">Performance</SelectItem>
                         <SelectItem value="Meeting">Meeting</SelectItem>
                         <SelectItem value="Workshop">Workshop</SelectItem>
@@ -433,7 +433,7 @@ export default function EventsPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="low">Low</SelectItem>
@@ -481,7 +481,7 @@ export default function EventsPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Select organizer" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" className="bg-white">
                       {members.map((member) => (
                         <SelectItem key={member.id} value={member.name}>
                           {member.name}
@@ -598,7 +598,7 @@ export default function EventsPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               {eventCategories.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -610,7 +610,7 @@ export default function EventsPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               <SelectItem value="All">All Status</SelectItem>
               <SelectItem value="upcoming">Upcoming</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>

@@ -373,7 +373,7 @@ export default function MeetingNotesPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent side="bottom" className="bg-white">
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="draft">Draft</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
@@ -581,7 +581,7 @@ export default function MeetingNotesPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" className="bg-white">
               <SelectItem value="All">All Status</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>

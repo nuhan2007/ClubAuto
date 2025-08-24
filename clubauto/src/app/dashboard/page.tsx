@@ -28,7 +28,7 @@ export default function Dashboard() {
   const upcomingEvents = events.filter((event) => event.status === "upcoming")
 
   // Get pending tasks
-  const pendingTasks = tasks.filter((task) => task.status === "pending").length
+  const pendingTasks = tasks.filter((task) => task.progress < 100).length
 
   // Get recent meetings (last 3)
   const recentMeetings = meetingNotes.slice(0, 3)

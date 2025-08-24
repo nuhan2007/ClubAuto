@@ -47,7 +47,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            The complete solution for student organizations. Track attendance, manage events, log volunteer hours, and
+            Track attendance, manage events, log volunteer hours, and
             keep your members engaged with our powerful club management platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -59,13 +59,6 @@ export default function HomePage() {
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            {/* <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-4 border-2 border-gray-300 bg-transparent"
-            >
-              Learn More
-            </Button> */}
           </div>
         </div>
       </section>
@@ -123,7 +116,7 @@ export default function HomePage() {
                 </div>
                 <CardTitle className="text-green-800">Volunteer Hours</CardTitle>
                 <CardDescription>
-                  Log and track community service hours with approval workflows and automatic calculations.
+                  Log and track volunteering hours with approval workflows and automatic calculations.
                 </CardDescription>
               </CardHeader>
             </Card>

@@ -99,7 +99,7 @@ export function QuickAddMember({ trigger, onSuccess }: QuickAddMemberProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select grade" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" className="bg-white">
                   <SelectItem value="9th">9th Grade</SelectItem>
                   <SelectItem value="10th">10th Grade</SelectItem>
                   <SelectItem value="11th">11th Grade</SelectItem>
@@ -136,7 +136,7 @@ export function QuickAddMember({ trigger, onSuccess }: QuickAddMemberProps) {
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent side="bottom" className="bg-white">
                 <SelectItem value="Member">Member</SelectItem>
                 <SelectItem value="Secretary">Secretary</SelectItem>
                 <SelectItem value="Treasurer">Treasurer</SelectItem>

@@ -21,84 +21,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true
+  let mounted = true;
 
-    const getInitialSession = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+      setLoading(false);
 
-        if (error) {
-          console.error("Error getting session:", error)
-        }
-
-        if (mounted) {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error("Error in getInitialSession:", error)
-        if (mounted) {
-          setUser(null)
-          setLoading(false)
-        }
-      }
+      // Optionally ensure user profile on sign in
+      // if (event === "SIGNED_IN" && session?.user) {
+      //   await ensureUserProfile(session.user);
+      // }
     }
+  );
 
-    getInitialSession()
-
-    return () => {
-      mounted = false;
+  // On initial mount, set loading to false if no session
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (mounted) {
+      setUser(session?.user ?? null);
+      setLoading(false);
     }
+  });
 
-    // Listen for auth changes
-    // const {
-    //   data: { subscription },
-    // } = supabase.auth.onAuthStateChange(async (event, session) => {
-    //   console.log("Auth state changed:", event, session?.user?.id)
+  return () => {
+    mounted = false;
+    subscription.unsubscribe();
+  };
+}, []);
 
-    //   if (mounted) {
-    //     setUser(session?.user ?? null)
-    //     setLoading(false)
-
-    //     // Create user profile if it doesn't exist
-    //     if (event === "SIGNED_IN" && session?.user) {
-    //       await ensureUserProfile(session.user)
-    //     }
-    //   }
-    // })
-
-    // return () => {
-    //   mounted = false
-    //   subscription.unsubscribe()
-    // }
-  }, [])
-
-  // const ensureUserProfile = async (user: User) => {
-  //   try {
-  //     // Check if profile exists
-  //     const { data: existingProfile } = await supabase.from("user_profiles").select("id").eq("id", user.id).single()
-
-  //     // Create profile if it doesn't exist
-  //     if (!existingProfile) {
-  //       const { error } = await supabase.from("user_profiles").insert([
-  //         {
-  //           id: user.id,
-  //           email: user.email!,
-  //           full_name: user.user_metadata?.full_name || "",
-  //         },
-  //       ])
-
-  //       if (error) {
-  //         console.error("Error creating user profile:", error)
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error ensuring user profile:", error)
-  //   }
-  // }
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -139,12 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true)
       await supabase.auth.signOut()
+      setUser(null)
       // Clear any cached data
       localStorage.removeItem("clubManagerAuth")
       localStorage.removeItem("selectedClub")
     } catch (error) {
       console.error("Error signing out:", error)
     } finally {
+      setLoading(false)
       window.location.href = "/"
     }
   }
